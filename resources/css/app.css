@@ -5,11 +5,15 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *)); */
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Poppins', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-ubuntu:
+        'Ubuntu', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
@@ -59,19 +63,56 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* breakpoints */
+    --breakpoint-bp575: 575px;
+    --breakpoint-bp400: 400px;
+    --breakpoint-bp360: 360px;
+    --breakpoint-bp1650: 1650px;
+
+    /* animation */
+    --animate-fade-up: fade-up 0.8s ease-in-out forwards;
+    --animate-fade-left: fade-left 0.8s ease-in-out forwards;
+
+    @keyframes fade-up {
+        0% {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-left {
+        0% {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
 }
 
 :root {
-    --background: oklch(1 0 0);
+    --background: #f9fffc;
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: #126936;
     --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
+    --secondary: #f2ca1d;
     --secondary-foreground: oklch(0.205 0 0);
+    --tertiary: #94be40;
+    --fourth: #1c5352;
+    --font-color: #1e1e1e;
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
     --accent: oklch(0.97 0 0);
@@ -97,7 +138,7 @@
     --sidebar-ring: oklch(0.87 0 0);
 }
 
-.dark {
+/* .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
@@ -130,7 +171,7 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(0.269 0 0);
     --sidebar-ring: oklch(0.439 0 0);
-}
+} */
 
 @layer base {
     * {
@@ -139,5 +180,44 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer components {
+    /* text size */
+    .t-size1 {
+        @apply text-[0.6rem] bp360:text-[0.7rem] bp400:text-xs bp1650:text-base md:text-[0.8rem] xl:text-[0.83rem] 2xl:text-sm;
+    }
+
+    .t-size2 {
+        @apply text-[0.7rem] bp360:text-xs bp400:text-[0.8rem] bp1650:text-lg md:text-[0.83rem] xl:text-sm 2xl:text-base;
+    }
+
+    .t-size3 {
+        @apply text-xs bp360:text-[0.8rem] bp400:text-[0.83rem] bp1650:text-xl md:text-sm xl:text-base 2xl:text-lg;
+    }
+
+    .t-size4 {
+        @apply text-[0.8rem] bp360:text-[0.83rem] bp400:text-sm bp1650:text-[1.3rem] md:text-base xl:text-lg 2xl:text-xl;
+    }
+    .t-size5 {
+        @apply text-[0.83rem] bp360:text-sm bp400:text-base bp1650:text-2xl md:text-lg xl:text-xl 2xl:text-[1.3rem];
+    }
+    .t-size6 {
+        @apply text-sm bp360:text-base bp400:text-lg bp1650:text-[1.6rem] md:text-xl xl:text-[1.3rem] 2xl:text-2xl;
+    }
+    .t-size7 {
+        @apply text-base bp360:text-lg bp400:text-xl bp1650:text-3xl md:text-[1.3rem] xl:text-2xl 2xl:text-[1.6rem];
+    }
+    .t-size7 {
+        @apply text-lg bp360:text-xl bp400:text-[1.3rem] bp1650:text-[2rem] md:text-2xl xl:text-[1.6rem] 2xl:text-3xl;
+    }
+    .t-size8 {
+        @apply text-xl bp360:text-[1.3rem] bp400:text-2xl bp1650:text-[2.3rem] md:text-[1.6rem] xl:text-3xl 2xl:text-[2rem];
+    }
+
+    /* animation */
+    .fade-up {
+        @apply animate-fade-up;
     }
 }
