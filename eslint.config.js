@@ -1,7 +1,7 @@
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import prettier from 'eslint-config-prettier/flat';
-import importPlugin from 'eslint-plugin-import';
+// import importPlugin from 'eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -49,8 +49,13 @@ export default [
         },
     },
     {
+        // plugins: {
+        //     import: importPlugin,
+        // },
         plugins: {
-            import: importPlugin,
+            'simple-import-sort': (
+                await import('eslint-plugin-simple-import-sort')
+            ).default,
         },
         settings: {
             'import/resolver': {
@@ -70,27 +75,31 @@ export default [
                     fixStyle: 'separate-type-imports',
                 },
             ],
-            'import/order': [
-                'error',
-                {
-                    groups: [
-                        'builtin',
-                        'external',
-                        'internal',
-                        'parent',
-                        'sibling',
-                        'index',
-                    ],
-                    alphabetize: {
-                        order: 'asc',
-                        caseInsensitive: true,
-                    },
-                },
-            ],
-            'import/consistent-type-specifier-style': [
-                'error',
-                'prefer-top-level',
-            ],
+
+            'simple-import-sort/imports': 'error',
+            'simple-import-sort/exports': 'error',
+
+            // 'import/order': [
+            //     // 'error',
+            //     {
+            //         groups: [
+            //             'builtin',
+            //             'external',
+            //             'internal',
+            //             'parent',
+            //             'sibling',
+            //             'index',
+            //         ],
+            //         alphabetize: {
+            //             order: 'asc',
+            //             caseInsensitive: true,
+            //         },
+            //     },
+            // ],
+            // 'import/consistent-type-specifier-style': [
+            //     'error',
+            //     'prefer-top-level',
+            // ],
         },
     },
     {
@@ -98,7 +107,11 @@ export default [
             '@stylistic': stylistic,
         },
         rules: {
-            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            '@stylistic/brace-style': [
+                'error',
+                '1tbs',
+                { allowSingleLine: false },
+            ],
             '@stylistic/padding-line-between-statements': [
                 'error',
                 ...paddingAroundControl,
@@ -126,7 +139,11 @@ export default [
         },
         rules: {
             curly: ['error', 'all'],
-            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            '@stylistic/brace-style': [
+                'error',
+                '1tbs',
+                { allowSingleLine: false },
+            ],
         },
     },
 ];
