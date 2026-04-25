@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${COMPOSE_PROJECT_NAME:-sim-desa-utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim-desa-utama}/app:latest
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_app
     restart: unless-stopped
     environment:
@@ -151,7 +151,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${COMPOSE_PROJECT_NAME:-sim-desa-utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim-desa-utama}/app:latest
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_queue
     restart: unless-stopped
     environment:
@@ -174,7 +174,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${COMPOSE_PROJECT_NAME:-sim-desa-utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim-desa-utama}/app:latest
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_scheduler
     restart: unless-stopped
     environment:
