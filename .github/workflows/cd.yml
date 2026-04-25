@@ -96,7 +96,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: GHCR_TOKEN,GHCR_USER,DB_HOST,DB_DATABASE,DB_USERNAME,DB_PASSWORD,DB_ROOT_PASSWORD,REDIS_PASSWORD,APP_NAME,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
+          envs: GHCR_TOKEN,GHCR_USER,DB_HOST,DB_DATABASE,DB_USERNAME,DB_PASSWORD,DB_ROOT_PASSWORD,REDIS_PASSWORD,APP_NAME,APP_KEY,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
           script: |
             set -e
             cd /opt/sim-desa-utama
@@ -112,7 +112,11 @@ jobs:
             export DB_PASSWORD="${DB_PASSWORD}"
             export DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD}"
             export REDIS_PASSWORD="${REDIS_PASSWORD}"
+            export APP_KEY="${APP_KEY}"
             export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}"
+
+            echo "==> Generating .env file from environment variables..."
+            env | grep -E '^(DB_|REDIS_|APP_|COMPOSE_)' > .env
 
             echo "==> Pulling latest images..."
             docker compose -f docker-compose.prod.yml pull app
@@ -143,5 +147,6 @@ jobs:
           DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           APP_NAME: ${{ vars.APP_NAME }}
+          APP_KEY: ${{ secrets.APP_KEY }}
           DOCKER_IMAGE_PATH: ${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim-desa-utama' }}
           COMPOSE_PROJECT_NAME: sim_desa_utama
