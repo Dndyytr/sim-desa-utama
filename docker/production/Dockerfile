@@ -45,7 +45,11 @@ LABEL maintainer="sim-desa-utama"
 RUN apk add --no-cache \
     libzip zip bash icu-libs
 
-RUN docker-php-ext-install pdo pdo_mysql zip pcntl bcmath opcache intl
+RUN apk add --no-cache --virtual .build-deps \
+    libzip-dev \
+    icu-dev \
+    && docker-php-ext-install pdo pdo_mysql zip pcntl bcmath opcache intl \
+    && apk del .build-deps
 
 # PHP production tuning (OPcache + JIT)
 RUN { \
