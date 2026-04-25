@@ -70,6 +70,15 @@ jobs:
       - name: Checkout code (for docker-compose file)
         uses: actions/checkout@v4
 
+      - name: Cek apakah rahasia kosong
+        run: |
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "KOSONG! SSH_KEY tidak terbaca oleh workflow"
+            exit 1
+          else
+            echo "AMAN. SSH_KEY memiliki isi"
+          fi
+
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -77,8 +86,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "docker-compose.prod.yml,docker/production/nginx.conf"
-          target: "/opt/sim-desa-utama"
+          source: 'docker-compose.prod.yml,docker/production/nginx.conf'
+          target: '/opt/sim-desa-utama'
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
