@@ -118,9 +118,16 @@ jobs:
             export APP_KEY="${APP_KEY}"
             export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}"
 
-            echo "==> Generating .env file from environment variables..."
-            env | grep -E '^(DB_|REDIS_|APP_|COMPOSE_)' > .env
-
+            # JANGAN overwrite .env di VPS agar perubahan manual tidak hilang
+            # echo "==> Generating .env file from environment variables..."
+            # env | grep -E '^(DB_|REDIS_|APP_|COMPOSE_)' > .env
+            
+            echo "==> Memeriksa keberadaan file .env..."
+            if [ ! -f .env ]; then
+              echo "WARNING: File .env tidak ditemukan di VPS! Docker mungkin akan gagal berjalan."
+            else
+              echo "OK: File .env ditemukan. Menggunakan konfigurasi yang ada di VPS."
+            fi
             echo "==> Pulling latest images..."
             docker compose -f docker-compose.prod.yml pull app
 
