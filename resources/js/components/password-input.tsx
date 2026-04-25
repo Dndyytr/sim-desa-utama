@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from 'lucide-react';
-import type { ComponentProps, ReactNode,Ref } from 'react';
+import type { ComponentProps, ReactNode, Ref } from 'react';
 import { useState } from 'react';
 
 import { Input } from '@/components/ui/input';
