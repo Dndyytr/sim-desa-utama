@@ -99,7 +99,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH
+          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
           script: |
             set -e
             cd /opt/sim-desa-utama
