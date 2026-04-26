@@ -49,6 +49,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim_desa_utama' }}/app
           tags: |
             type=sha,prefix=
+            type=raw,value=${{ github.sha }}
             type=raw,value=latest
             type=ref,event=tag
 
@@ -92,6 +93,9 @@ jobs:
           source: 'docker-compose.prod.yml,docker/production/nginx.conf'
           target: '/opt/sim_desa_utama'
 
+      - name: Set tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -110,6 +114,7 @@ jobs:
             echo "==> Exporting environment for docker-compose..."
             export DOCKER_IMAGE_PATH=$(echo "${DOCKER_IMAGE_PATH}" | tr '[:upper:]' '[:lower:]')
             export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}"
+            export IMAGE_TAG="${IMAGE_TAG}"
 
             # JANGAN overwrite .env di VPS agar perubahan manual tidak hilang
             # echo "==> Generating .env file from environment variables..."

@@ -15,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_app
     restart: unless-stopped
     environment:
@@ -51,6 +51,7 @@ services:
       - ./docker/production/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - app_storage:/var/www/storage:ro
       - app_code:/var/www:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
     networks:
@@ -159,7 +160,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_queue
     restart: unless-stopped
     environment:
@@ -182,7 +183,7 @@ services:
     build:
       context: .
       dockerfile: docker/production/Dockerfile
-    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:latest
+    image: ghcr.io/${DOCKER_IMAGE_PATH:-sim_desa_utama}/app:${IMAGE_TAG:-latest}
     container_name: ${COMPOSE_PROJECT_NAME:-sim_desa}_scheduler
     restart: unless-stopped
     environment:
