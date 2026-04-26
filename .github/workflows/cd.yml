@@ -46,7 +46,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim-desa-utama' }}/app
+          images: ghcr.io/${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim_desa_utama' }}/app
           tags: |
             type=sha,prefix=
             type=raw,value=latest
@@ -90,7 +90,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           source: 'docker-compose.prod.yml,docker/production/nginx.conf'
-          target: '/opt/sim-desa-utama'
+          target: '/opt/sim_desa_utama'
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -102,7 +102,7 @@ jobs:
           envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
           script: |
             set -e
-            cd /opt/sim-desa-utama
+            cd /opt/sim_desa_utama
 
             echo "==> Logging into GitHub Container Registry..."
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
@@ -144,5 +144,5 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
 
-          DOCKER_IMAGE_PATH: ${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim-desa-utama' }}
+          DOCKER_IMAGE_PATH: ${{ github.repository_owner }}/${{ vars.DOCKER_IMAGE_NAME || 'sim_desa_utama' }}
           COMPOSE_PROJECT_NAME: sim_desa_utama

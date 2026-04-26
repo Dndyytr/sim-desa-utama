@@ -40,7 +40,7 @@ RUN rm -rf node_modules
 ###############################################
 FROM php:8.4-fpm-alpine AS production
 
-LABEL maintainer="sim-desa-utama"
+LABEL maintainer="sim_desa_utama"
 
 RUN apk add --no-cache \
     libzip zip bash icu-libs
