@@ -99,7 +99,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
+          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH
           script: |
             set -e
             cd /opt/sim-desa-utama
@@ -114,7 +114,7 @@ jobs:
             # JANGAN overwrite .env di VPS agar perubahan manual tidak hilang
             # echo "==> Generating .env file from environment variables..."
             # env | grep -E '^(DB_|REDIS_|APP_|COMPOSE_)' > .env
-            
+
             echo "==> Memeriksa keberadaan file .env..."
             if [ ! -f .env ]; then
               echo "WARNING: File .env tidak ditemukan di VPS! Docker mungkin akan gagal berjalan."
