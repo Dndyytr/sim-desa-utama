@@ -209,7 +209,7 @@ volumes:
   redis_data:
     driver: local
   app_code:
-    driver: local
+    name: '${COMPOSE_PROJECT_NAME}_app_code_${IMAGE_TAG}'
 
 # =============================================================================
 # Networks
