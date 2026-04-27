@@ -99,7 +99,7 @@ export default function Login({
                                     className="border-(--font-color)/70"
                                 />
                                 <Label
-                                    className="t-size2 cursor-pointer font-medium text-(--font-color)/70 transition-all duration-300 ease-in-out hover:-translate-y-0.5"
+                                    className="t-size2 cursor-pointer font-medium text-(--font-color)/70 transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5"
                                     htmlFor="remember"
                                 >
                                     Ingatkan Saya
@@ -107,7 +107,7 @@ export default function Login({
                                 {canResetPassword && (
                                     <TextLink
                                         href={request()}
-                                        className="t-size2 ml-auto text-(--tertiary) transition-all duration-300 ease-in-out hover:-translate-y-0.5"
+                                        className="t-size2 ml-auto text-(--tertiary) transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5"
                                         tabIndex={5}
                                     >
                                         Lupa password?
