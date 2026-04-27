@@ -13,8 +13,8 @@ on:
         description: 'Alasan deploy production'
         required: true
         default: 'Manual deploy untuk update production'
-  release:
-    types: [published]
+  # release:
+  #   types: [published]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -103,7 +103,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME
+          envs: GHCR_TOKEN,GHCR_USER,DOCKER_IMAGE_PATH,COMPOSE_PROJECT_NAME,IMAGE_TAG
           script: |
             set -e
             cd /opt/sim_desa_utama
