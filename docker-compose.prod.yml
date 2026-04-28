@@ -147,6 +147,7 @@ services:
       PMA_PORT: ${DB_PORT}
       PMA_ARBITRARY: 0
       UPLOAD_LIMIT: 64M
+      PMA_ABSOLUTE_URI: https://pma.dndytr.my.id/
     depends_on:
       mysql:
         condition: service_healthy
