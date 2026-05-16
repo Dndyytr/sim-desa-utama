@@ -30,26 +30,26 @@ export default function PasswordInput({
             )}
             <Input
                 type={showPassword ? 'text' : 'password'}
-                className={cn('pr-10', prefix && 'pl-8 bp360:pl-8', className)}
+                className={cn('pr-10', prefix && 'pl-9 bp360:pl-9', className)}
                 ref={ref}
                 {...props}
             />
             <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex cursor-pointer items-center rounded-r-md px-3 text-(--font-color)/70 hover:text-(--font-color) focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none"
+                className="absolute inset-y-0 right-0 flex cursor-pointer items-center px-3 text-(--font-color)/70 transition-all duration-300 ease-in-out hover:text-(--font-color) active:text-(--font-color)"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
             >
                 {showPassword ? (
-                    <EyeOff
-                        strokeWidth={2}
-                        className="size-4 md:size-4.5 lg:size-4.75 2xl:size-5"
+                    <Eye
+                        strokeWidth={2.5}
+                        className="size-4 md:size-4.25 lg:size-4.5 xl:size-4.75 2xl:size-5"
                     />
                 ) : (
-                    <Eye
-                        strokeWidth={2}
-                        className="size-4 md:size-4.5 lg:size-4.75 2xl:size-5"
+                    <EyeOff
+                        strokeWidth={2.5}
+                        className="size-4 md:size-4.25 lg:size-4.5 xl:size-4.75 2xl:size-5"
                     />
                 )}
             </button>

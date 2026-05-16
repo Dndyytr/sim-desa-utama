@@ -46,8 +46,8 @@ export default function Login({
                                 <div className="relative">
                                     <span className="absolute inset-y-0 left-0 flex items-center px-3 text-(--font-color)/70">
                                         <Mail
-                                            strokeWidth={2}
-                                            className="size-3.5 md:size-3.75 lg:size-4 xl:size-4.25 2xl:size-4.5"
+                                            strokeWidth={2.5}
+                                            className="size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75"
                                         />
                                     </span>
                                     <Input
@@ -59,7 +59,7 @@ export default function Login({
                                         tabIndex={1}
                                         autoComplete="email"
                                         placeholder="Masukkan email anda"
-                                        className="pl-8 bp360:pl-8"
+                                        className="pl-9 bp360:pl-9"
                                     />
                                 </div>
                                 <InputError message={errors.email} />
@@ -83,8 +83,8 @@ export default function Login({
                                     placeholder="Masukkan password anda"
                                     prefix={
                                         <Lock
-                                            strokeWidth={2}
-                                            className="size-3.5 md:size-3.75 lg:size-4 xl:size-4.25 2xl:size-4.5"
+                                            strokeWidth={2.5}
+                                            className="size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75"
                                         />
                                     }
                                 />
@@ -96,7 +96,7 @@ export default function Login({
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
-                                    className="border-(--font-color)/70"
+                                    className="size-3.5 border-(--font-color)/70 md:size-3.75 lg:size-4 xl:size-4.25 2xl:size-4.5 [&>span>svg]:size-3 md:[&>span>svg]:size-3.25 lg:[&>span>svg]:size-3.5 xl:[&>span>svg]:size-3.75 2xl:[&>span>svg]:size-4"
                                 />
                                 <Label
                                     className="t-size2 cursor-pointer font-medium text-(--font-color)/70 transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5"
@@ -106,7 +106,7 @@ export default function Login({
                                 </Label>
                                 {canResetPassword && (
                                     <TextLink
-                                        href={request()}
+                                        href={request().url}
                                         className="t-size2 ml-auto text-(--tertiary) transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5"
                                         tabIndex={5}
                                     >
@@ -131,7 +131,7 @@ export default function Login({
                         {/* {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
+                                <TextLink href={register().url} tabIndex={5}>
                                     Sign up
                                 </TextLink>
                             </div>

@@ -15,9 +15,10 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
+import type { Auth } from '@/types/auth';
 
 export function NavUser() {
-    const { auth } = usePage().props;
+    const { auth } = usePage<{ auth: Auth }>().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
 
@@ -31,16 +32,23 @@ export function NavUser() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
+                            variant="primary"
                             size="lg"
-                            className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
+                            className="group cursor-pointer ring-(--secondary) active:ring-2 data-[state=open]:ring-2"
                             data-test="sidebar-menu-button"
                         >
-                            <UserInfo user={auth.user} />
-                            <ChevronsUpDown className="ml-auto size-4" />
+                            <UserInfo
+                                className="bg-(--secondary) text-(--primary)"
+                                user={auth.user}
+                            />
+                            <ChevronsUpDown
+                                strokeWidth={2.7}
+                                className="ml-auto"
+                            />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-(--secondary) shadow-[0_5px_8px_1px_rgba(0,0,0,0.3)]"
                         align="end"
                         side={
                             isMobile

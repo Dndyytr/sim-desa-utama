@@ -1,3 +1,5 @@
+// import FlashToast from '@/components/flash-toast';
+import Alert from '@/components/alert';
 import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
 
 export default function AuthLayout({
@@ -11,6 +13,8 @@ export default function AuthLayout({
 }) {
     return (
         <AuthLayoutTemplate title={title} description={description}>
+            {/* <FlashToast /> */}
+            <Alert />
             {children}
         </AuthLayoutTemplate>
     );

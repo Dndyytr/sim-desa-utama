@@ -10,7 +10,7 @@ export default function AuthSimpleLayout({
 }: AuthLayoutProps) {
     return (
         <div className="flex h-svh flex-col justify-center gap-6 p-2 lg:items-center">
-            <div className="flex size-full max-h-250 max-w-350 flex-col gap-2 lg:flex-row lg:gap-4">
+            <div className="flex size-full max-h-250 max-w-400 flex-col gap-2 lg:flex-row lg:gap-4">
                 <div className="size-full max-h-50 overflow-hidden rounded-md bp360:max-h-60 bp400:max-h-70 md:max-h-full">
                     <div className="relative size-full bg-primary">
                         <figure className="absolute top-2 left-2 z-3 flex items-center">
