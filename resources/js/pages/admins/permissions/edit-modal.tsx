@@ -54,6 +54,12 @@ export default function EditModalPermission({
     features,
     permission,
 }: EditModalPermissionProps) {
+    type UpdatePermissionArg = Parameters<typeof update.form.patch>[0];
+
+    const updatePermissionArg = {
+        id: permission.id,
+    } as unknown as UpdatePermissionArg;
+
     const [isOpen, setIsOpen] = useState(false);
 
     const [selectedFeature, setSelectedFeature] = useState<string>(
@@ -168,7 +174,7 @@ export default function EditModalPermission({
 
                 {/* <form onSubmit={handleSubmit} className="space-y-4"> */}
                 <Form
-                    {...update.form.patch(permission.id)}
+                    {...update.form.patch(updatePermissionArg)}
                     transform={(data) => ({
                         ...data,
                         feature: selectedFeature,

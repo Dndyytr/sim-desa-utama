@@ -102,7 +102,7 @@ export default function PermissionsIndex({
         sort: sort && sort !== 'created_asc' ? sort : undefined,
     };
 
-    // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih..
+    // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih.
     const handleQueryChange = (
         query: Record<string, string | number | null | undefined>,
     ) => {
