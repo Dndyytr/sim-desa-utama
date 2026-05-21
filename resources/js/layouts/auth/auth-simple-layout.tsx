@@ -9,7 +9,7 @@ export default function AuthSimpleLayout({
     description,
 }: AuthLayoutProps) {
     return (
-        <div className="flex h-svh flex-col justify-center gap-6 p-2 lg:items-center">
+        <div className="flex h-svh flex-col justify-center gap-6 bg-(--background) p-2 lg:items-center">
             <div className="flex size-full max-h-250 max-w-400 flex-col gap-2 lg:flex-row lg:gap-4">
                 <div className="size-full max-h-50 overflow-hidden rounded-md bp360:max-h-60 bp400:max-h-70 md:max-h-full">
                     <div className="relative size-full bg-primary">
@@ -104,7 +104,7 @@ export default function AuthSimpleLayout({
                         {children}
                     </div>
                     <span className="t-size1 mt-auto inline-block animate-fade-left font-medium text-(--font-color)/60 opacity-0 delay-700">
-                        © 2026 Desa Utama | Created By Dandy Tr
+                        &copy; 2026 Desa Utama | Created By Dandy Tr
                     </span>
                 </div>
             </div>

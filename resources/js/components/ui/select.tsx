@@ -35,7 +35,7 @@ function SelectTrigger({
             data-slot="select-trigger"
             data-size={size}
             className={cn(
-                'flex w-fit cursor-pointer items-center justify-between gap-2 rounded-md bg-(--primary)/5 px-2.5 py-1.5 font-medium whitespace-nowrap text-(--font-color) ring-[1.7px] ring-(--primary)/60 transition-all duration-300 ease-in-out hover:bg-(--primary)/15 hover:ring-(--primary)/80 focus-visible:ring-(--primary)/80 active:bg-(--primary)/15 active:ring-(--primary)/80 data-placeholder:text-(--font-color)/60 data-[state=open]:ring-(--primary)/80 bp360:px-3 bp360:py-2',
+                'flex w-fit max-w-35 cursor-pointer items-center justify-between gap-2 rounded-md bg-(--primary)/5 px-2.5 py-1.5 font-medium whitespace-nowrap text-(--font-color) ring-[1.7px] ring-(--primary)/60 transition-all duration-300 ease-in-out hover:bg-(--primary)/15 hover:ring-(--primary)/80 focus-visible:ring-(--primary)/80 active:bg-(--primary)/15 active:ring-(--primary)/80 data-placeholder:text-(--font-color)/60 data-[state=open]:ring-(--primary)/80 bp360:px-3 bp360:py-2 [&>span]:truncate [&>svg]:shrink-0',
                 className,
             )}
             {...props}
@@ -101,7 +101,7 @@ function SelectLabel({
     return (
         <SelectPrimitive.Label
             data-slot="select-label"
-            className={cn('px-2 py-1.5 text-muted-foreground', className)}
+            className={cn('px-2 py-1.5 font-medium text-stone-500', className)}
             {...props}
         />
     );
@@ -145,7 +145,7 @@ function SelectSeparator({
         <SelectPrimitive.Separator
             data-slot="select-separator"
             className={cn(
-                'pointer-events-none -mx-1 my-1 h-px bg-(--primary)',
+                'pointer-events-none -mx-1 my-1 h-[1.5px] bg-(--primary)',
                 className,
             )}
             {...props}

@@ -11,12 +11,15 @@ import { SearchBar } from '@/components/ui/search-bar';
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
+    SelectLabel,
+    SelectSeparator,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
 import { SingleDeleteDialog } from '@/components/ui/single-delete';
-import { index } from '@/routes/users';
+import { bulkDelete, destroy, index } from '@/routes/users';
 
 interface Role {
     id: number;
@@ -34,11 +37,18 @@ interface User {
     updated_at: string;
 }
 
+// Halaman listing pengguna menerima data yang sudah diproses dari UserController@index.
+// Props di bawah berisi data tabel, daftar role untuk filter, serta state query aktif.
 export default function UsersIndex({
     users,
+    // roles,
     // i,
     entries,
     search,
+    sort,
+    // role,
+    verified,
+    hasFilter,
     // pagination,
 }: {
     users: {
@@ -55,13 +65,98 @@ export default function UsersIndex({
         prev_page_url: string | null;
         next_page_url: string | null;
     };
+    roles: Role[];
     i: number;
     entries: any;
     search: string;
+    sort: string;
+    role?: string | number | null;
+    verified?: string | null;
+    hasFilter: boolean;
     pagination?: any;
 }) {
+    // State lokal hanya menyimpan checkbox yang dipilih untuk kebutuhan bulk delete.
     const [selected, setSelected] = useState<string[]>([]);
 
+    // Normalisasi value filter dari props agar cocok dengan format value Select.
+    // const currentRole = role ? role.toString() : 'all';
+    const currentVerified = verified || 'all';
+
+    // Jika belum ada filter dari URL, Select dibiarkan undefined agar placeholder "Filter" muncul.
+    const currentFilter = hasFilter
+        ? // ? role
+          //     ? `role:${currentRole}`
+          // : verified
+          verified
+            ? `verified:${currentVerified}`
+            : `sort:${sort}`
+        : undefined;
+
+    // Query filter yang harus tetap terbawa saat user mencari atau mengganti jumlah entries.
+    const queryFilters = {
+        sort: hasFilter ? sort : undefined,
+        // role: role || undefined,
+        verified: verified || undefined,
+    };
+
+    // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih.
+    const handleQueryChange = (
+        query: Record<string, string | number | null | undefined>,
+    ) => {
+        const params: Record<string, string | number | null | undefined> = {
+            search: search || undefined,
+            entries,
+            ...queryFilters,
+            ...query,
+        };
+
+        Object.keys(params).forEach((key) => {
+            if (params[key] === undefined || params[key] === null) {
+                delete params[key];
+            }
+        });
+
+        router.get(index().url, params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    // Satu dropdown Filter berisi 3 jenis value: sort, role, dan verified.
+    // Memilih role/status akan menghapus filter lain agar dropdown hanya punya satu pilihan aktif.
+    const handleFilterChange = (value: string) => {
+        const [type, selectedValue] = value.split(':');
+
+        if (type === 'sort') {
+            handleQueryChange({
+                sort: selectedValue,
+                role: undefined,
+                verified: undefined,
+            });
+
+            return;
+        }
+
+        // if (type === 'role') {
+        //     handleQueryChange({
+        //         sort: 'created_asc',
+        //         role: selectedValue,
+        //         verified: undefined,
+        //     });
+
+        //     return;
+        // }
+
+        if (type === 'verified') {
+            handleQueryChange({
+                sort: 'created_asc',
+                role: undefined,
+                verified: selectedValue,
+            });
+        }
+    };
+
+    // Checkbox header memilih semua user yang tampil di halaman pagination saat ini.
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
             setSelected(users.data.map((user) => user.id.toString()));
@@ -70,6 +165,7 @@ export default function UsersIndex({
         }
     };
 
+    // Checkbox per baris menambah/menghapus id user dari daftar bulk delete.
     const toggleSelection = (id: string) => {
         setSelected((prev) =>
             prev.includes(id)
@@ -86,11 +182,13 @@ export default function UsersIndex({
             <Head title="Kelola Pengguna" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
+                {/* SearchBar mengirim keyword ke server dan tetap membawa filter yang sedang aktif. */}
                 <div className="flex w-full max-w-full items-center gap-2 md:max-w-[70%] lg:max-w-1/2">
                     <SearchBar
                         route={route('users.index')}
                         search={search}
                         formId="search-users"
+                        query={{ entries, ...queryFilters }}
                     />
                     <Button
                         type="submit"
@@ -101,29 +199,72 @@ export default function UsersIndex({
                     </Button>
                 </div>
 
+                {/* Toolbar utama: filter/sort di kiri, entries dan tombol tambah di kanan. */}
                 <div className="grid items-center justify-between gap-2 md:grid-cols-2">
-                    <div className="flex items-center gap-2">
-                        <Select>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                            value={currentFilter}
+                            onValueChange={handleFilterChange}
+                        >
                             <SelectTrigger className="t-size3 gap-1.5 bg-(--secondary)/30 text-(--primary) hover:bg-(--secondary)/50 active:bg-(--secondary)/50 data-placeholder:text-(--primary)">
                                 <Filter className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                 <SelectValue placeholder="Filter" />
                             </SelectTrigger>
+                            {/* Opsi filter memakai prefix value agar handler tahu tipe filter yang dipilih. */}
                             <SelectContent className="t-size3 border-(--primary)/60 bg-yellow-100">
-                                <SelectItem value="null">
-                                    Waktu Terbaru
-                                </SelectItem>
-                                <SelectItem value="null">
-                                    Waktu Terlama
-                                </SelectItem>
+                                <SelectGroup>
+                                    <SelectLabel>Urutan</SelectLabel>
+                                    <SelectItem value="sort:created_desc">
+                                        Waktu Terbaru
+                                    </SelectItem>
+                                    <SelectItem value="sort:created_asc">
+                                        Waktu Terlama
+                                    </SelectItem>
+                                    <SelectItem value="sort:updated_desc">
+                                        Terakhir Diubah
+                                    </SelectItem>
+                                    <SelectItem value="sort:updated_asc">
+                                        Paling Lama Diubah
+                                    </SelectItem>
+                                    <SelectItem value="sort:name_asc">
+                                        Nama A-Z
+                                    </SelectItem>
+                                    <SelectItem value="sort:name_desc">
+                                        Nama Z-A
+                                    </SelectItem>
+                                </SelectGroup>
+                                {/* <SelectSeparator />
+                                <SelectGroup>
+                                    <SelectLabel>Peran</SelectLabel>
+                                    {roles.map((roleOption) => (
+                                        <SelectItem
+                                            key={roleOption.id}
+                                            value={`role:${roleOption.id}`}
+                                        >
+                                            {roleOption.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup> */}
+                                <SelectSeparator className="bg-(--primary)/60" />
+                                <SelectGroup>
+                                    <SelectLabel>Status</SelectLabel>
+                                    <SelectItem value="verified:verified">
+                                        Terverifikasi
+                                    </SelectItem>
+                                    <SelectItem value="verified:unverified">
+                                        Belum Terverifikasi
+                                    </SelectItem>
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
                         {selected.length > 0 && (
+                            /* Bulk delete hanya muncul saat ada minimal satu user dipilih. */
                             <BulkDeleteDialog
                                 title="Pengguna"
                                 selectedCount={selected.length}
                                 onConfirm={() => {
                                     router.post(
-                                        route('users.bulk-delete'),
+                                        bulkDelete().url,
                                         { ids: selected },
                                         {
                                             preserveScroll: true,
@@ -139,6 +280,7 @@ export default function UsersIndex({
                             route={route('users.index')}
                             search={search}
                             entries={entries}
+                            query={queryFilters}
                         />
                         {/* {can.includes('c-users') && ( */}
                         <Link
@@ -152,7 +294,8 @@ export default function UsersIndex({
                     </div>
                 </div>
 
-                <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-(--primary)/5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
+                {/* Tabel menampilkan data dari paginator Inertia; filter/search selalu dilakukan di server. */}
+                <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-green-50 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
                     {users.data.length > 0 ? (
                         <div className="bg-white">
                             <table className="w-full">
@@ -285,10 +428,11 @@ export default function UsersIndex({
                                                         label="Hapus"
                                                         onConfirm={() =>
                                                             router.delete(
-                                                                route(
-                                                                    'users.destroy',
-                                                                    user.id,
-                                                                ),
+                                                                destroy(user.id)
+                                                                    .url,
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
                                                             )
                                                         }
                                                     />
@@ -299,9 +443,12 @@ export default function UsersIndex({
                                     ))}
                                 </tbody>
                             </table>
+                            {/* Pagination memakai link dari Laravel paginator yang sudah membawa query aktif. */}
                             <div
-                                className={`t-size3 bg-(--primary)/5 px-3 py-2 bp360:px-3.25 bp400:px-3.5 md:px-4 ${
-                                    shouldShowPagination ? '' : 'mb-7'
+                                className={`t-size3 bg-green-50 ${
+                                    shouldShowPagination
+                                        ? 'px-3 py-2 bp360:px-3.25 bp400:px-3.5 md:px-4'
+                                        : 'mb-7'
                                 }`}
                             >
                                 <InertiaPagination pagination={users} />

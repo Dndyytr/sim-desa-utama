@@ -9,6 +9,7 @@ interface SearchBarProps {
     search?: string;
     formId: string;
     className?: string;
+    query?: Record<string, string | number | null | undefined>;
 }
 
 export function SearchBar({
@@ -16,12 +17,24 @@ export function SearchBar({
     route,
     search,
     formId,
+    query = {},
 }: SearchBarProps) {
     const [searchs, setSearch] = useState(search || '');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(route, { search: searchs });
+        const params: Record<string, string | number | null | undefined> = {
+            ...query,
+            search: searchs,
+        };
+
+        Object.keys(params).forEach((key) => {
+            if (params[key] === undefined || params[key] === null) {
+                delete params[key];
+            }
+        });
+
+        router.get(route, params);
     };
 
     return (

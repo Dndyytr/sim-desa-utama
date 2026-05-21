@@ -38,10 +38,10 @@ export function DeleteDialog({
                 <AlertDialogHeader>
                     <div className="relative inline-flex w-max">
                         {/* Ripple Effect Background */}
-                        <span className="absolute inset-0 animate-ping-slow rounded-full bg-red-500 opacity-20"></span>
+                        <span className="absolute inset-0 z-1 animate-ping-slow rounded-full bg-red-500 opacity-20"></span>
 
                         {/* Animated Icon Wrapper */}
-                        <span className="relative flex animate-trash-shake items-center justify-center rounded-full bg-red-100 p-4 text-red-600 transition-transform duration-300 hover:scale-110 hover:rotate-3 active:scale-110 active:rotate-3">
+                        <span className="relative z-2 flex animate-trash-shake items-center justify-center rounded-full bg-red-100 p-4 text-red-600 transition-transform duration-300 hover:scale-110 hover:rotate-3 active:scale-110 active:rotate-3">
                             <Trash2 className="size-8.5 bp360:size-9 bp400:size-9.5 md:size-10 lg:size-10.5 xl:size-11 2xl:size-11.5" />
                         </span>
                     </div>

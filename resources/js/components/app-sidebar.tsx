@@ -27,6 +27,7 @@ import {
     // SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as permissions } from '@/routes/permissions';
 import { index as users } from '@/routes/users';
 import type { NavItem } from '@/types';
 
@@ -43,7 +44,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Kelola Hak Akses',
-        href: '#',
+        href: permissions().url,
         icon: UserKey,
     },
     {

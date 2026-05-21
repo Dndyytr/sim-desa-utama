@@ -11,21 +11,32 @@ interface ShowEntriesProps {
     route: string;
     search?: string;
     entries?: number;
+    query?: Record<string, string | number | null | undefined>;
 }
 
-export function Entries({ route, search, entries = 10 }: ShowEntriesProps) {
+export function Entries({
+    route,
+    search,
+    entries = 10,
+    query = {},
+}: ShowEntriesProps) {
     const handleEntriesChange = (value: string) => {
-        router.get(
-            route,
-            {
-                entries: value,
-                search: search,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
+        const params: Record<string, string | number | null | undefined> = {
+            ...query,
+            entries: value,
+            search: search,
+        };
+
+        Object.keys(params).forEach((key) => {
+            if (params[key] === undefined || params[key] === null) {
+                delete params[key];
+            }
+        });
+
+        router.get(route, params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     return (
