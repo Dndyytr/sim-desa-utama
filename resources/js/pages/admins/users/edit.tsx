@@ -32,6 +32,10 @@ export default function UsersEdit({
             <div className="h-full px-2 py-2 bp360:px-2.25 bp400:px-2.5 md:px-3 md:py-2.25 lg:px-3.5 lg:py-2.5 xl:px-4 xl:py-3 2xl:px-4.5 2xl:py-3.5">
                 <Form
                     {...update.form({ user: user.id })}
+                    transform={(data) => ({
+                        ...data,
+                        roles: selectedRoles,
+                    })}
                     resetOnSuccess={['password', 'password_confirmation']}
                     disableWhileProcessing
                     className="h-full"
@@ -41,7 +45,7 @@ export default function UsersEdit({
                             <div className="flex h-full flex-col gap-4 2xl:gap-5.5">
                                 <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
                                     <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">
-                                        <div className="min-w-max">
+                                        <div className="min-w-max shrink-0">
                                             <span className="grid size-10.25 place-items-center rounded-full bg-(--primary)/10 bp360:size-10.5 bp400:size-10.75 md:size-11.25 lg:size-11.75 xl:size-12.25 2xl:size-12.75">
                                                 <User className="size-6 text-(--primary) bp360:size-6.25 bp400:size-6.5 md:size-6.75 lg:size-7.25 xl:size-7.75 2xl:size-8.25" />
                                             </span>
@@ -119,14 +123,6 @@ export default function UsersEdit({
                                                 animation={2}
                                                 maxCount={3}
                                             />
-                                            {selectedRoles.map((role) => (
-                                                <input
-                                                    key={role}
-                                                    type="hidden"
-                                                    name="roles[]"
-                                                    value={role}
-                                                />
-                                            ))}
                                             <InputError
                                                 message={errors.roles}
                                             />

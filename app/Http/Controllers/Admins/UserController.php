@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admins;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ListingRequest;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -17,28 +21,84 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(ListingRequest $request): Response
     {
-        $page = $request->input('page', 1);
-        $entries = $request->input('entries', 10);
-        $search = $request->input('search');
+        // 1. Ambil query umum yang sudah divalidasi dan dinormalisasi oleh ListingRequest.
+        $validated = $request->validated();
 
+        // 2. Pisahkan query umum dari filter khusus halaman pengguna.
+        $search = $validated['search'] ?? null;
+        // $role = $request->input('role');
+        $verified = $request->input('verified');
+
+        // 3. Simpan sort asli dari URL untuk props UI; null berarti dropdown tetap menampilkan placeholder.
+        $sort = $request->query('sort') ?? null;
+
+        // 4. Batasi value filter status agar hanya menerima opsi yang didukung.
+        if (! in_array($verified, ['verified', 'unverified'], true)) {
+            $verified = null;
+        }
+
+        // 5. Role dipakai sebagai id, jadi abaikan input kosong/non-numeric sebelum masuk ke query relasi.
+        // if ($role !== null && $role !== '' && !ctype_digit((string) $role)) {
+        //     $role = null;
+        // }
+
+        // 6. Daftar sort yang diizinkan. Key dipakai frontend, value dipakai query builder.
+        $sorts = [
+            'created_desc' => ['created_at', 'desc'],
+            'created_asc' => ['created_at', 'asc'],
+            'updated_desc' => ['updated_at', 'desc'],
+            'updated_asc' => ['updated_at', 'asc'],
+            'name_asc' => ['name', 'asc'],
+            'name_desc' => ['name', 'desc'],
+        ];
+
+        // 7. Resolve sort lewat whitelist; input tidak dikenal otomatis fallback ke default ListingRequest.
+        [$sortColumn, $sortDirection] = $request->resolveSort($sorts);
+
+        // 8. Susun query utama: eager load role, terapkan search/filter, lalu urutkan dan paginate.
         $users = User::with('roles')
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%');
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%')
+                        ->orWhereHas('roles', function ($query) use ($search) {
+                            $query->where('name', 'like', '%'.$search.'%');
+                        });
+                });
             })
-            ->paginate($entries)
+            // ->when($role, function ($query, $role) {
+            //     $query->whereHas('roles', function ($query) use ($role) {
+            //         $query->whereKey($role);
+            //     });
+            // })
+            ->when($verified === 'verified', function ($query) {
+                $query->whereNotNull('email_verified_at');
+            })
+            ->when($verified === 'unverified', function ($query) {
+                $query->whereNull('email_verified_at');
+            })
+            ->orderBy($sortColumn, $sortDirection)
+            ->orderBy('id', $sortDirection)
+            ->paginate($validated['entries'])
             ->onEachSide(0)
-            ->appends($request->query());
+            ->appends($request->except(['page']));
 
-        $i = ($page - 1) * $entries;
+        // 9. Ambil daftar role untuk opsi filter peran di dropdown.
+        $roles = Role::orderBy('name')->get(['id', 'name']);
 
+        // 10. Kirim data tabel, state query, dan metadata UI ke halaman Inertia.
         return Inertia::render('admins/users/index', [
             'users' => $users,
-            'i' => $i,
-            'entries' => (int) $entries,
+            'roles' => $roles,
+            'i' => $request->startIndex(),
+            'entries' => (int) $validated['entries'],
             'search' => $search,
+            'sort' => $sort,
+            // 'role' => $role,
+            'verified' => $verified,
+            'hasFilter' => $request->hasFilter(['role', 'verified']),
         ]);
     }
 
@@ -186,7 +246,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'Data '.$user->name.' berhasil disimpan.');
+                ->with('success', 'Data '.$user->name.' berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Gagal memperbarui user: '.$th->getMessage());
@@ -201,7 +261,8 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if ($user) {
-            $user->delete();
+            /** @var Model $user */
+            $user->delete(); // @phpstan-ignore-line
 
             return redirect()->route('users.index')->with('success', 'Data '.$user->name.' berhasil dihapus.');
         } else {
@@ -217,7 +278,8 @@ class UserController extends Controller
             if (is_array($ids) && count($ids) > 0) {
                 // Gunakan get() lalu delete() per item agar Model Event terpicu
                 // (whereIn()->delete() adalah query langsung, tidak memicu Event)
-                User::whereIn('id', $ids)->get()->each->delete();
+                /** @var Collection<int, User> $users */
+                User::whereIn('id', $ids, 'and', false)->get()->each(fn ($user) => $user->delete());
 
                 return redirect()->route('users.index')
                     ->with('success', 'Data yang dipilih berhasil dihapus.');

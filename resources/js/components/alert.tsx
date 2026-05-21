@@ -116,7 +116,7 @@ export default function Alert() {
             text: 'text-(--primary)',
             icon: (
                 <svg
-                    className="size-7.5 text-(--primary) bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
+                    className="relative z-2 size-7.5 text-(--primary) bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                 >
@@ -136,7 +136,7 @@ export default function Alert() {
             text: 'text-red-600',
             icon: (
                 <svg
-                    className="size-7.5 text-red-600 bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
+                    className="relative z-2 size-7.5 text-red-600 bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                 >
@@ -156,7 +156,7 @@ export default function Alert() {
             text: 'text-(--secondary)',
             icon: (
                 <svg
-                    className="size-7.5 text-(--secondary) bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
+                    className="relative z-2 size-7.5 text-(--secondary) bp360:size-7.75 bp400:size-8 md:size-8.25 lg:size-8.5 xl:size-8.75 2xl:size-9"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                 >
@@ -181,9 +181,9 @@ export default function Alert() {
                 className={`flex w-full items-center gap-2 rounded-lg border p-2 shadow-lg bp400:p-2.25 md:p-2.5 lg:p-3 ${current.bg} ${current.border} ${current.text}`}
             >
                 <div className="relative inline-flex w-max shrink-0">
-                    <div
-                        className={`${current.ping} absolute inset-0 animate-ping-slow rounded-full opacity-20`}
-                    ></div>
+                    <span
+                        className={`${current.ping} absolute inset-0 z-1 animate-ping-slow rounded-full opacity-20`}
+                    ></span>
                     {current.icon}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -196,7 +196,7 @@ export default function Alert() {
                         onClick={() =>
                             setState((prev) => ({ ...prev, show: false }))
                         }
-                        className={`ml-auto inline-flex cursor-pointer rounded-full border p-1 transition-all duration-300 ease-in-out ${current.close}`}
+                        className={`ml-auto inline-flex cursor-pointer rounded-full border border-transparent p-1 transition-all duration-300 ease-in-out ${current.close}`}
                     >
                         <span className="sr-only">Dismiss</span>
                         <svg

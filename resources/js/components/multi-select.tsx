@@ -206,7 +206,7 @@ export const MultiSelect = React.forwardRef<
                         className={cn(
                             'flex w-full cursor-pointer items-center justify-between rounded-md',
                             'border border-(--primary)/20 bg-(--tertiary)/5 px-2.5 py-1.5 shadow-xs transition-all duration-300 ease-in-out outline-none selection:bg-(--tertiary)/10 selection:text-(--font-color) autofill:bg-(--tertiary)/10 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 bp360:px-3 bp360:py-2',
-                            'hover:border-(--primary)/40 hover:bg-(--tertiary)/10 hover:ring-[3px] hover:ring-(--tertiary)/30',
+                            'hover:border-(--primary)/40 hover:bg-(--tertiary)/10 hover:ring-[3px] hover:ring-(--tertiary)/30 active:border-(--primary)/40 active:bg-(--tertiary)/10 active:ring-[3px] active:ring-(--tertiary)/30 data-[state=open]:border-(--primary)/40 data-[state=open]:bg-(--tertiary)/10 data-[state=open]:ring-[3px] data-[state=open]:ring-(--tertiary)/30',
                             className,
                         )}
                     >

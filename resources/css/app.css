@@ -247,13 +247,17 @@
 } */
 
 @layer base {
-    * {
+    /* * {
         @apply border-border;
+    } */
+
+    html {
+        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent;
     }
 
-    body {
+    /* body {
         @apply bg-background;
-    }
+    } */
 }
 
 @layer components {
@@ -308,10 +312,10 @@
 
     /* scrollbar */
     .sb-primary {
-        @apply [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 bp360:[&::-webkit-scrollbar]:h-1.75 bp360:[&::-webkit-scrollbar]:w-1.75 bp400:[&::-webkit-scrollbar]:h-2 bp400:[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-(--primary);
+        @apply scrollbar-thin scrollbar-thumb-(--primary) scrollbar-track-transparent;
     }
 
     .sb-secondary {
-        @apply [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 bp360:[&::-webkit-scrollbar]:h-1.75 bp360:[&::-webkit-scrollbar]:w-1.75 bp400:[&::-webkit-scrollbar]:h-2 bp400:[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-(--secondary);
+        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent;
     }
 }
