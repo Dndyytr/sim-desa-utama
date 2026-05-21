@@ -137,6 +137,11 @@ export default function PermissionsIndex({
         }
     };
 
+    type DestroyPermissionArg = Parameters<typeof destroy>[0];
+
+    const permissionRouteArg = (id: Permission['id']) =>
+        ({ id: String(id) }) as unknown as DestroyPermissionArg;
+
     return (
         <>
             <Head title="Kelola Hak Akses" />
@@ -335,7 +340,9 @@ export default function PermissionsIndex({
                                                             onConfirm={() =>
                                                                 router.delete(
                                                                     destroy(
-                                                                        permission.id,
+                                                                        permissionRouteArg(
+                                                                            permission.id,
+                                                                        ),
                                                                     ).url,
                                                                     {
                                                                         preserveScroll: true,
