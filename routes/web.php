@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admins\PermissionController;
+use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
         Route::post('permissions/bulk-delete', [PermissionController::class, 'bulkDelete'])->name('permissions.bulk-delete');
         Route::resource('permissions', PermissionController::class);
+        Route::post('roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulk-delete');
+        Route::resource('roles', RoleController::class);
     });
 });
 
