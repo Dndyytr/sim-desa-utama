@@ -14,45 +14,31 @@ import {
     SelectGroup,
     SelectItem,
     SelectLabel,
-    SelectSeparator,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
 import { SingleDeleteDialog } from '@/components/ui/single-delete';
-import { bulkDelete, destroy, index } from '@/routes/users';
+import { bulkDelete, destroy, index } from '@/routes/roles';
 
 interface Role {
     id: number;
     name: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    password: string;
-    email_verified_at: string | null;
-    roles: Role[];
+    description: string;
+    features_count: number;
+    roles: string[];
     created_at: string;
     updated_at: string;
 }
 
-// Halaman listing pengguna menerima data yang sudah diproses dari UserController@index.
-// Props di bawah berisi data tabel, daftar role untuk filter, serta state query aktif.
-export default function UsersIndex({
-    users,
-    // roles,
+export default function RolesIndex({
+    roles,
     // i,
     entries,
     search,
     sort,
-    // role,
-    verified,
-    hasFilter,
-    // pagination,
 }: {
-    users: {
-        data: User[];
+    roles: {
+        data: Role[];
         from: number;
         to: number;
         total: number;
@@ -65,38 +51,38 @@ export default function UsersIndex({
         prev_page_url: string | null;
         next_page_url: string | null;
     };
-    roles: Role[];
     i: number;
     entries: any;
     search: string;
-    sort: string;
-    role?: string | number | null;
-    verified?: string | null;
-    hasFilter: boolean;
-    pagination?: any;
+    sort: string | null;
 }) {
-    // State lokal hanya menyimpan checkbox yang dipilih untuk kebutuhan bulk delete.
     const [selected, setSelected] = useState<string[]>([]);
 
-    // Normalisasi value filter dari props agar cocok dengan format value Select.
-    // const currentRole = role ? role.toString() : 'all';
-    const currentVerified = verified || 'all';
+    const toggleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelected(roles.data.map((role) => role.id.toString()));
+        } else {
+            setSelected([]);
+        }
+    };
 
-    // Jika belum ada filter dari URL, Select dibiarkan undefined agar placeholder "Filter" muncul.
-    const currentFilter = hasFilter
-        ? // ? role
-          //     ? `role:${currentRole}`
-          // : verified
-          verified
-            ? `verified:${currentVerified}`
-            : `sort:${sort}`
-        : undefined;
+    const toggleSelection = (id: string) => {
+        setSelected((prev) =>
+            prev.includes(id)
+                ? prev.filter((item) => item !== id)
+                : [...prev, id],
+        );
+    };
+
+    // Check if pagination should be shown
+    const shouldShowPagination = roles.last_page > 1;
+
+    const currentFilter =
+        sort && sort !== 'created_asc' ? `sort:${sort}` : undefined;
 
     // Query filter yang harus tetap terbawa saat user mencari atau mengganti jumlah entries.
     const queryFilters = {
-        sort: hasFilter ? sort : undefined,
-        // role: role || undefined,
-        verified: verified || undefined,
+        sort: sort && sort !== 'created_asc' ? sort : undefined,
     };
 
     // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih.
@@ -130,83 +116,37 @@ export default function UsersIndex({
         if (type === 'sort') {
             handleQueryChange({
                 sort: selectedValue,
-                role: undefined,
-                verified: undefined,
-            });
-
-            return;
-        }
-
-        // if (type === 'role') {
-        //     handleQueryChange({
-        //         sort: 'created_asc',
-        //         role: selectedValue,
-        //         verified: undefined,
-        //     });
-
-        //     return;
-        // }
-
-        if (type === 'verified') {
-            handleQueryChange({
-                sort: 'created_asc',
-                role: undefined,
-                verified: selectedValue,
             });
         }
     };
 
-    // Checkbox header memilih semua user yang tampil di halaman pagination saat ini.
-    const toggleSelectAll = (checked: boolean) => {
-        if (checked) {
-            setSelected(users.data.map((user) => user.id.toString()));
-        } else {
-            setSelected([]);
-        }
-    };
+    type DestroyRoleArg = Parameters<typeof destroy>[0];
 
-    // Checkbox per baris menambah/menghapus id user dari daftar bulk delete.
-    const toggleSelection = (id: string) => {
-        setSelected((prev) =>
-            prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id],
-        );
-    };
-
-    // Check if pagination should be shown
-    const shouldShowPagination = users.last_page > 1;
-
-    type DestroyUserArg = Parameters<typeof destroy>[0];
-
-    const userRouteArg = (id: User['id']) =>
-        ({ id: String(id) }) as unknown as DestroyUserArg;
+    const roleRouteArg = (id: Role['id']) =>
+        ({ id: String(id) }) as unknown as DestroyRoleArg;
 
     return (
         <>
-            <Head title="Kelola Pengguna" />
+            <Head title="Kelola Peran" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
-                {/* SearchBar mengirim keyword ke server dan tetap membawa filter yang sedang aktif. */}
                 <div className="flex w-full max-w-full items-center gap-2 md:max-w-[70%] lg:max-w-1/2">
                     <SearchBar
-                        route={route('users.index')}
+                        route={route('roles.index')}
                         search={search}
-                        formId="search-users"
-                        query={{ entries, ...queryFilters }}
+                        formId="search-roles"
                     />
                     <Button
                         type="submit"
-                        form="search-users"
+                        form="search-roles"
                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                     >
                         Cari
                     </Button>
                 </div>
 
-                {/* Toolbar utama: filter/sort di kiri, entries dan tombol tambah di kanan. */}
                 <div className="grid items-center justify-between gap-2 md:grid-cols-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <Select
                             value={currentFilter}
                             onValueChange={handleFilterChange}
@@ -215,7 +155,6 @@ export default function UsersIndex({
                                 <Filter className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                 <SelectValue placeholder="Filter" />
                             </SelectTrigger>
-                            {/* Opsi filter memakai prefix value agar handler tahu tipe filter yang dipilih. */}
                             <SelectContent className="t-size3 border-(--primary)/60 bg-yellow-100">
                                 <SelectGroup>
                                     <SelectLabel>Urutan</SelectLabel>
@@ -238,34 +177,11 @@ export default function UsersIndex({
                                         Nama Z-A
                                     </SelectItem>
                                 </SelectGroup>
-                                {/* <SelectSeparator />
-                                <SelectGroup>
-                                    <SelectLabel>Peran</SelectLabel>
-                                    {roles.map((roleOption) => (
-                                        <SelectItem
-                                            key={roleOption.id}
-                                            value={`role:${roleOption.id}`}
-                                        >
-                                            {roleOption.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup> */}
-                                <SelectSeparator className="bg-(--primary)/60" />
-                                <SelectGroup>
-                                    <SelectLabel>Status</SelectLabel>
-                                    <SelectItem value="verified:verified">
-                                        Terverifikasi
-                                    </SelectItem>
-                                    <SelectItem value="verified:unverified">
-                                        Belum Terverifikasi
-                                    </SelectItem>
-                                </SelectGroup>
                             </SelectContent>
                         </Select>
                         {selected.length > 0 && (
-                            /* Bulk delete hanya muncul saat ada minimal satu user dipilih. */
                             <BulkDeleteDialog
-                                title="Pengguna"
+                                title="Peran"
                                 selectedCount={selected.length}
                                 onConfirm={() => {
                                     router.post(
@@ -282,14 +198,13 @@ export default function UsersIndex({
                     </div>
                     <div className="flex items-center gap-2 justify-self-end">
                         <Entries
-                            route={route('users.index')}
+                            route={route('roles.index')}
                             search={search}
                             entries={entries}
-                            query={queryFilters}
                         />
-                        {/* {can.includes('c-users') && ( */}
+                        {/* {can.includes('c-roles') && ( */}
                         <Link
-                            href={route('users.create')}
+                            href={route('roles.create')}
                             className="t-size3 flex items-center gap-1.5 rounded-md bg-(--primary) px-2.5 py-1.5 font-medium whitespace-nowrap text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary) hover:text-(--primary) hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:bg-(--secondary) active:text-(--primary) active:shadow-none bp360:px-3 bp360:py-2"
                         >
                             <PlusCircle className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
@@ -299,9 +214,8 @@ export default function UsersIndex({
                     </div>
                 </div>
 
-                {/* Tabel menampilkan data dari paginator Inertia; filter/search selalu dilakukan di server. */}
                 <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-green-50 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
-                    {users.data.length > 0 ? (
+                    {roles.data.length > 0 ? (
                         <div className="bg-white">
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
@@ -317,8 +231,8 @@ export default function UsersIndex({
                                                 }
                                                 checked={
                                                     selected.length ===
-                                                        users.data.length &&
-                                                    users.data.length > 0
+                                                        roles.data.length &&
+                                                    roles.data.length > 0
                                                 }
                                             />
                                         </th>
@@ -338,13 +252,13 @@ export default function UsersIndex({
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Email</span>
+                                            <span>Deskripsi</span>
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Peran</span>
+                                            <span>Jumlah Fitur</span>
                                         </th>
                                         <th
                                             scope="col"
@@ -355,9 +269,9 @@ export default function UsersIndex({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.data.map((user, index) => (
+                                    {roles.data.map((role, index) => (
                                         <tr
-                                            key={user.id}
+                                            key={role.id}
                                             className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                         >
                                             <td className="px-4 py-2 text-center">
@@ -365,11 +279,11 @@ export default function UsersIndex({
                                                     className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
                                                     onCheckedChange={() =>
                                                         toggleSelection(
-                                                            user.id.toString(),
+                                                            role.id.toString(),
                                                         )
                                                     }
                                                     checked={selected.includes(
-                                                        user.id.toString(),
+                                                        role.id.toString(),
                                                     )}
                                                 />
                                             </td>
@@ -377,45 +291,28 @@ export default function UsersIndex({
                                                 scope="row"
                                                 className="px-4 py-2 text-center font-medium"
                                             >
-                                                {users.from + index}
+                                                {roles.from + index}
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
-                                                {user.name}
+                                                {role.name}
+                                            </td>
+                                            <td className="px-4 py-2 text-center font-medium wrap-break-word whitespace-pre-wrap">
+                                                {role.description}
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
-                                                {user.email}
-                                            </td>
-                                            <td className="px-4 py-2 text-center font-medium">
-                                                <div className="inline-flex flex-wrap gap-1">
-                                                    {user.roles.length > 0 ? (
-                                                        user.roles.map(
-                                                            (role) => (
-                                                                <span
-                                                                    key={
-                                                                        role.id
-                                                                    }
-                                                                    className="rounded-full bg-(--primary)/10 px-2.5 py-1.5 whitespace-nowrap text-(--primary)"
-                                                                >
-                                                                    {role.name}
-                                                                </span>
-                                                            ),
-                                                        )
-                                                    ) : (
-                                                        <span className="rounded-full bg-(--primary)/10 px-2.5 py-1.5 whitespace-nowrap text-(--primary)">
-                                                            Tidak Ada
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                <span className="rounded-full bg-(--primary)/10 px-2.5 py-1.5 whitespace-nowrap text-(--primary)">
+                                                    {role.features_count} Fitur
+                                                </span>
                                             </td>
                                             <td className="px-4 py-2 text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     {/* {can.includes(
-                                                                'u-users',
+                                                                'u-roles',
                                                             ) && ( */}
                                                     <Link
                                                         href={route(
-                                                            'users.edit',
-                                                            user.id,
+                                                            'roles.edit',
+                                                            role.id,
                                                         )}
                                                         className="inline-flex items-center gap-1 rounded-md bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 ring-[1.7px] ring-(--secondary)/50 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] hover:ring-(--secondary)/70 active:translate-y-0.5 active:bg-(--secondary)/50 active:shadow-none active:ring-(--secondary)/70 bp360:px-3 bp360:py-2"
                                                     >
@@ -425,17 +322,17 @@ export default function UsersIndex({
                                                     {/* )} */}
                                                     {/* Untuk single delete */}
                                                     {/* {can.includes(
-                                                                'd-users',
+                                                                'd-roles',
                                                             ) && ( */}
                                                     <SingleDeleteDialog
-                                                        title="Pengguna"
-                                                        itemName={user.name}
+                                                        title="Peran"
+                                                        itemName={role.name}
                                                         label="Hapus"
                                                         onConfirm={() =>
                                                             router.delete(
                                                                 destroy(
-                                                                    userRouteArg(
-                                                                        user.id,
+                                                                    roleRouteArg(
+                                                                        role.id,
                                                                     ),
                                                                 ).url,
                                                                 {
@@ -451,7 +348,6 @@ export default function UsersIndex({
                                     ))}
                                 </tbody>
                             </table>
-                            {/* Pagination memakai link dari Laravel paginator yang sudah membawa query aktif. */}
                             <div
                                 className={`t-size3 bg-green-50 ${
                                     shouldShowPagination
@@ -459,7 +355,7 @@ export default function UsersIndex({
                                         : 'mb-7'
                                 }`}
                             >
-                                <InertiaPagination pagination={users} />
+                                <InertiaPagination pagination={roles} />
                             </div>
                         </div>
                     ) : (
@@ -475,10 +371,10 @@ export default function UsersIndex({
     );
 }
 
-UsersIndex.layout = {
+RolesIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Kelola Pengguna',
+            title: 'Kelola Peran',
             href: index(),
         },
     ],

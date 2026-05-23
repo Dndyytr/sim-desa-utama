@@ -23,6 +23,12 @@ export default function UsersEdit({
         userRoles || [],
     );
 
+    type UpdateUserArg = Parameters<typeof update>[0];
+
+    const updateUserArg = {
+        id: user.id,
+    } as unknown as UpdateUserArg;
+
     return (
         <>
             <Head title="Kelola Pengguna" />
@@ -31,7 +37,7 @@ export default function UsersEdit({
             </span>
             <div className="h-full px-2 py-2 bp360:px-2.25 bp400:px-2.5 md:px-3 md:py-2.25 lg:px-3.5 lg:py-2.5 xl:px-4 xl:py-3 2xl:px-4.5 2xl:py-3.5">
                 <Form
-                    {...update.form({ user: user.id })}
+                    {...update.form(updateUserArg)}
                     transform={(data) => ({
                         ...data,
                         roles: selectedRoles,

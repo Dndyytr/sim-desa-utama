@@ -12,7 +12,7 @@ function Checkbox({
         <CheckboxPrimitive.Root
             data-slot="checkbox"
             className={cn(
-                'peer shrink-0 cursor-pointer rounded-[3px] border-[1.7px] shadow-xs transition-all duration-300 ease-in-out outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:aria-invalid:ring-destructive/40',
+                'peer shrink-0 cursor-pointer rounded-[3px] border-[1.7px] shadow-xs transition-all duration-300 ease-in-out outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white dark:aria-invalid:ring-destructive/40',
                 className,
             )}
             {...props}
@@ -21,7 +21,7 @@ function Checkbox({
                 data-slot="checkbox-indicator"
                 className="flex items-center justify-center text-current transition-none"
             >
-                <CheckIcon strokeWidth={3} className="" />
+                <CheckIcon strokeWidth={3} />
             </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>
     );
