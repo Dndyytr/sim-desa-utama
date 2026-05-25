@@ -1,6 +1,7 @@
 import type { route as routeFn } from 'ziggy-js';
 
 import type { Auth } from '@/types/auth';
+import type { NavItem } from '@/types/navigation';
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
@@ -8,6 +9,14 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            can: string[];
+            hasRole: string[];
+            flash: {
+                success: string | null;
+                error: string | null;
+                warning: string | null;
+            };
+            nav: NavItem[];
             [key: string]: unknown;
         };
     }

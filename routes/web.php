@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admins\MenuController;
 use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -10,12 +12,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return Auth::check()
-        ? redirect('/dashboard')
+        ? redirect('/dashboards')
         : redirect('/login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    // Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::resource('dashboards', DashboardController::class);
 
     // Admin routes
     Route::prefix('admin')->group(function () {
@@ -25,6 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('permissions', PermissionController::class);
         Route::post('roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulk-delete');
         Route::resource('roles', RoleController::class);
+        Route::post('menus/bulk-delete', [MenuController::class, 'bulkDelete'])->name('menus.bulk-delete');
+        Route::resource('menus', MenuController::class);
     });
 });
 

@@ -33,7 +33,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { index as dashboard } from '@/routes/dashboards';
 import type { BreadcrumbItem, NavItem, User } from '@/types';
 
 type Props = {

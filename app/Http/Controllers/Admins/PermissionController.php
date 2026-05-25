@@ -7,13 +7,25 @@ use App\Http\Requests\ListingRequest;
 use App\Models\Menu;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 
-class PermissionController extends Controller
+class PermissionController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('permission:r-permissions', only: ['index', 'show']),
+            new Middleware('permission:c-permissions', only: ['create', 'store']),
+            new Middleware('permission:u-permissions', only: ['edit', 'update']),
+            new Middleware('permission:d-permissions', only: ['destroy', 'bulkDelete']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */

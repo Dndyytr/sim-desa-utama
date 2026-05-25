@@ -1,15 +1,15 @@
-// import { Link } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     BookOpenText,
     Globe,
-    Home,
-    ScrollText,
-    SquareMenu,
-    University,
-    UserCog,
-    UserKey,
-    Users,
+    // Home,
+    // ScrollText,
+    // SquareMenu,
+    // University,
+    // UserCog,
+    // UserKey,
+    // Users,
 } from 'lucide-react';
 
 import AppLogo from '@/components/app-logo';
@@ -26,63 +26,63 @@ import {
     // SidebarMenuButton,
     // SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { index as permissions } from '@/routes/permissions';
-import { index as roles } from '@/routes/roles';
-import { index as users } from '@/routes/users';
+// import { dashboard } from '@/routes';
+// import { index as permissions } from '@/routes/permissions';
+// import { index as roles } from '@/routes/roles';
+// import { index as users } from '@/routes/users';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-        icon: Home,
-    },
-    {
-        title: 'Kelola Pengguna',
-        href: users().url,
-        icon: Users,
-    },
-    {
-        title: 'Kelola Hak Akses',
-        href: permissions().url,
-        icon: UserKey,
-    },
-    {
-        title: 'Kelola Peran',
-        href: roles().url,
-        icon: UserCog,
-    },
-    {
-        title: 'Kelola Menu',
-        href: '#',
-        icon: SquareMenu,
-    },
-    {
-        title: 'Kelola Informasi',
-        href: '#',
-        icon: University,
-        children: [
-            {
-                title: 'Kelola Pengumuman',
-                href: '#',
-            },
-            {
-                title: 'Kelola Berita',
-                href: '#',
-            },
-            {
-                title: 'Kelola Info Desa',
-                href: '#',
-            },
-        ],
-    },
-    {
-        title: 'Laporan',
-        href: '#',
-        icon: ScrollText,
-    },
-];
+// const mainNavItems: NavItem[] = [
+//     {
+//         title: 'Dashboard',
+//         href: dashboard().url,
+//         icon: Home,
+//     },
+//     {
+//         title: 'Kelola Pengguna',
+//         href: users().url,
+//         icon: Users,
+//     },
+//     {
+//         title: 'Kelola Hak Akses',
+//         href: permissions().url,
+//         icon: UserKey,
+//     },
+//     {
+//         title: 'Kelola Peran',
+//         href: roles().url,
+//         icon: UserCog,
+//     },
+//     {
+//         title: 'Kelola Menu',
+//         href: '#',
+//         icon: SquareMenu,
+//     },
+//     {
+//         title: 'Kelola Informasi',
+//         href: '#',
+//         icon: University,
+//         children: [
+//             {
+//                 title: 'Kelola Pengumuman',
+//                 href: '#',
+//             },
+//             {
+//                 title: 'Kelola Berita',
+//                 href: '#',
+//             },
+//             {
+//                 title: 'Kelola Info Desa',
+//                 href: '#',
+//             },
+//         ],
+//     },
+//     {
+//         title: 'Laporan',
+//         href: '#',
+//         icon: ScrollText,
+//     },
+// ];
 
 const footerNavItems: NavItem[] = [
     {
@@ -98,6 +98,8 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { nav }: any = usePage().props;
+    const mainNavItems: NavItem[] = nav;
     const { setOpenMobile, isMobile } = useSidebar();
 
     return (

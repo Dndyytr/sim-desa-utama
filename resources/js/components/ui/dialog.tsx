@@ -55,12 +55,12 @@ function DialogContent({
             <DialogPrimitive.Content
                 data-slot="dialog-content"
                 className={cn(
-                    'fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-10px)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl bg-(--primary) shadow-lg transition-all duration-300 ease-in-out data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-xl',
+                    'fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-5rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[calc(-50%-1.25rem)] gap-4 rounded-xl bg-(--primary) pt-10 shadow-lg transition-all duration-300 ease-in-out data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-xl lg:max-w-152 xl:max-w-160 2xl:max-w-2xl',
                     className,
                 )}
                 {...props}
             >
-                <div className="relative mt-10 flex max-h-[calc(100dvh-10px)] w-full flex-col gap-2 rounded-t-md rounded-b-xl bg-white px-2.5 pb-2.5 bp360:px-3 bp360:pb-3 bp400:px-3.25 bp400:pb-3.25 md:px-3.5 md:pb-3.5 lg:px-4 lg:pb-4 xl:px-4.5 xl:pb-4.5 2xl:px-5 2xl:pb-5">
+                <div className="relative flex max-h-[calc(100dvh-5rem)] w-full flex-col gap-2 rounded-t-md rounded-b-xl bg-white px-2.5 pb-2.5 bp360:px-3 bp360:pb-3 bp400:px-3.25 bp400:pb-3.25 md:px-3.5 md:pb-3.5 lg:px-4 lg:pb-4 xl:px-4.5 xl:pb-4.5 2xl:px-5 2xl:pb-5">
                     {children}
                     <DialogPrimitive.Close className="absolute top-4 right-4 cursor-pointer rounded-full bg-white p-1 text-(--primary) shadow-[0_0_5px_0_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out hover:bg-(--primary) hover:text-white active:bg-(--primary) active:text-white disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0">
                         <XIcon

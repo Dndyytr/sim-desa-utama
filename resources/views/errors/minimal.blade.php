@@ -10,8 +10,12 @@
     <style>
         html {
             scrollbar-width: thin;
-            scrollbar-color: var(--secondary) transparent;
+            scrollbar-color: var(--secondary) var(--primary);
             background-color: var(--primary);
+        }
+
+        html::-webkit-scrollbar-thumb {
+            border-radius: 9999px;
         }
     </style>
 

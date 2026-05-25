@@ -1,4 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
+import type { LucideIcon } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { ChevronDown } from 'lucide-react';
 
 import {
@@ -19,6 +21,23 @@ import {
     CollapsibleTrigger,
 } from './ui/collapsible';
 
+const resolveIcon = (icon: NavItem['icon']): LucideIcon | null => {
+    if (!icon) {
+        return null;
+    }
+
+    if (typeof icon !== 'string') {
+        return icon;
+    }
+
+    const resolvedIcon = LucideIcons[icon as keyof typeof LucideIcons];
+
+    return resolvedIcon &&
+        (typeof resolvedIcon === 'function' || typeof resolvedIcon === 'object')
+        ? (resolvedIcon as LucideIcon)
+        : null;
+};
+
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
     const { url } = usePage();
@@ -27,7 +46,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         <SidebarGroup className="px-0 py-0 lg:px-2">
             <SidebarMenu>
                 {items.map((item) => {
-                    const Icon = item.icon;
+                    const Icon = resolveIcon(item.icon);
                     const hasChildren =
                         item.children && item.children.length > 0;
 
@@ -59,46 +78,51 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
                                             {item.children?.map(
-                                                (child, index) => (
-                                                    <SidebarMenuSubItem
-                                                        key={`${item.title}-${child.title}`}
-                                                        style={{
-                                                            animationDelay: `${(index + 1) * 70}ms`,
-                                                        }}
-                                                        className="opacity-0 group-data-[state=open]/collapsible:animate-fade-in-sub"
-                                                    >
-                                                        <SidebarMenuButton
-                                                            asChild
-                                                            isActive={url.startsWith(
-                                                                child.href as string,
-                                                            )}
-                                                            tooltip={{
-                                                                children:
-                                                                    child.title,
+                                                (child, index) => {
+                                                    const ChildIcon =
+                                                        resolveIcon(child.icon);
+
+                                                    return (
+                                                        <SidebarMenuSubItem
+                                                            key={`${item.title}-${child.title}`}
+                                                            style={{
+                                                                animationDelay: `${(index + 1) * 70}ms`,
                                                             }}
+                                                            className="opacity-0 group-data-[state=open]/collapsible:animate-fade-in-sub"
                                                         >
-                                                            <Link
-                                                                href={
-                                                                    child.href
-                                                                }
-                                                                prefetch
-                                                            >
-                                                                {child.icon && (
-                                                                    <child.icon
-                                                                        strokeWidth={
-                                                                            2.7
-                                                                        }
-                                                                    />
+                                                            <SidebarMenuButton
+                                                                asChild
+                                                                isActive={url.startsWith(
+                                                                    child.href as string,
                                                                 )}
-                                                                <span>
-                                                                    {
-                                                                        child.title
+                                                                tooltip={{
+                                                                    children:
+                                                                        child.title,
+                                                                }}
+                                                            >
+                                                                <Link
+                                                                    href={
+                                                                        child.href
                                                                     }
-                                                                </span>
-                                                            </Link>
-                                                        </SidebarMenuButton>
-                                                    </SidebarMenuSubItem>
-                                                ),
+                                                                    prefetch
+                                                                >
+                                                                    {ChildIcon && (
+                                                                        <ChildIcon
+                                                                            strokeWidth={
+                                                                                2.7
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                    <span>
+                                                                        {
+                                                                            child.title
+                                                                        }
+                                                                    </span>
+                                                                </Link>
+                                                            </SidebarMenuButton>
+                                                        </SidebarMenuSubItem>
+                                                    );
+                                                },
                                             )}
                                         </SidebarMenuSub>
                                     </CollapsibleContent>
