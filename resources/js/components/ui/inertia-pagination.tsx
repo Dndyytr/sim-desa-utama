@@ -31,6 +31,53 @@ interface InertiaPaginationProps {
     };
 }
 
+type VisiblePage = number | 'start-ellipsis' | 'end-ellipsis';
+
+const getVisiblePages = (
+    currentPage: number,
+    lastPage: number,
+): VisiblePage[] => {
+    if (lastPage <= 3) {
+        return Array.from({ length: lastPage }, (_, index) => index + 1);
+    }
+
+    if (lastPage === 4) {
+        return currentPage <= 2
+            ? [1, 2, 'end-ellipsis', 4]
+            : [1, 'start-ellipsis', 3, 4];
+    }
+
+    if (currentPage <= 2) {
+        return [1, 2, 'end-ellipsis', lastPage];
+    }
+
+    if (currentPage === lastPage) {
+        return [1, 'start-ellipsis', lastPage];
+    }
+
+    if (currentPage === lastPage - 1) {
+        return [1, 'start-ellipsis', lastPage - 1, lastPage];
+    }
+
+    return [1, 'start-ellipsis', currentPage, 'end-ellipsis', lastPage];
+};
+
+const getUrlWithPage = (url: string | null, page: number) => {
+    if (!url) {
+        return '#';
+    }
+
+    const hashIndex = url.indexOf('#');
+    const path = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+    const hash = hashIndex >= 0 ? url.slice(hashIndex) : '';
+
+    if (/[?&]page=\d+/.test(path)) {
+        return `${path.replace(/([?&]page=)\d+/, `$1${page}`)}${hash}`;
+    }
+
+    return `${path}${path.includes('?') ? '&' : '?'}page=${page}${hash}`;
+};
+
 export function InertiaPagination({ pagination }: InertiaPaginationProps) {
     const {
         current_page,
@@ -46,6 +93,22 @@ export function InertiaPagination({ pagination }: InertiaPaginationProps) {
     } = pagination;
 
     if (last_page <= 1) return null;
+
+    const visiblePages = getVisiblePages(current_page, last_page);
+    const urlByPage = new Map(
+        pageLinks
+            .map((page) => [Number(page.label), page.url] as const)
+            .filter(([page]) => Number.isInteger(page)),
+    );
+    const basePageUrl =
+        first_page_url ||
+        pageLinks.find((page) => page.url !== null)?.url ||
+        last_page_url;
+    const getPageUrl = (page: number) =>
+        urlByPage.get(page) ||
+        (page === 1 ? first_page_url : null) ||
+        (page === last_page ? last_page_url : null) ||
+        getUrlWithPage(basePageUrl, page);
 
     return (
         <div className="flex items-center justify-between">
@@ -75,51 +138,36 @@ export function InertiaPagination({ pagination }: InertiaPaginationProps) {
                         </PaginationLink>
                     </PaginationItem>
 
+                    <PaginationItem>
+                        <PaginationPrevious href={prev_page_url || '#'} />
+                    </PaginationItem>
+
                     {/* Page Numbers */}
-                    {pageLinks.map((page, index: number) => {
-                        if (page.label === '...') {
+                    {visiblePages.map((page) => {
+                        if (typeof page === 'string') {
                             return (
-                                <PaginationItem key={index}>
+                                <PaginationItem key={page}>
                                     <PaginationEllipsis />
                                 </PaginationItem>
                             );
-                        } else if (
-                            page.label === 'pagination.previous' ||
-                            page.label === '&laquo; Previous'
-                        ) {
-                            return (
-                                <PaginationItem key={index}>
-                                    <PaginationPrevious
-                                        href={prev_page_url || '#'}
-                                    />
-                                </PaginationItem>
-                            );
-                        } else if (
-                            page.label === 'pagination.next' ||
-                            page.label === 'Next &raquo;'
-                        ) {
-                            return (
-                                <PaginationItem key={index}>
-                                    <PaginationNext
-                                        href={next_page_url || '#'}
-                                    />
-                                </PaginationItem>
-                            );
-                        } else {
-                            return (
-                                <PaginationItem key={index}>
-                                    <PaginationLink
-                                        className="t-size4 font-semibold"
-                                        href={page.url || '#'}
-                                        isActive={page.active}
-                                        dangerouslySetInnerHTML={{
-                                            __html: page.label,
-                                        }}
-                                    />
-                                </PaginationItem>
-                            );
                         }
+
+                        return (
+                            <PaginationItem key={page}>
+                                <PaginationLink
+                                    className="t-size4 font-semibold"
+                                    href={getPageUrl(page)}
+                                    isActive={page === current_page}
+                                >
+                                    {page}
+                                </PaginationLink>
+                            </PaginationItem>
+                        );
                     })}
+
+                    <PaginationItem>
+                        <PaginationNext href={next_page_url || '#'} />
+                    </PaginationItem>
 
                     {/* Last Page Button */}
                     <PaginationItem className="hidden md:block">

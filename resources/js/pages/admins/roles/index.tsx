@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Filter, Pencil, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 
@@ -57,6 +57,8 @@ export default function RolesIndex({
     sort: string | null;
 }) {
     const [selected, setSelected] = useState<string[]>([]);
+
+    const { can }: any = usePage().props;
 
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -179,7 +181,7 @@ export default function RolesIndex({
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                        {selected.length > 0 && (
+                        {selected.length > 0 && can.includes('d-roles') && (
                             <BulkDeleteDialog
                                 title="Peran"
                                 selectedCount={selected.length}
@@ -202,15 +204,15 @@ export default function RolesIndex({
                             search={search}
                             entries={entries}
                         />
-                        {/* {can.includes('c-roles') && ( */}
-                        <Link
-                            href={route('roles.create')}
-                            className="t-size3 flex items-center gap-1.5 rounded-md bg-(--primary) px-2.5 py-1.5 font-medium whitespace-nowrap text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary) hover:text-(--primary) hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:bg-(--secondary) active:text-(--primary) active:shadow-none bp360:px-3 bp360:py-2"
-                        >
-                            <PlusCircle className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
-                            Tambah Baru
-                        </Link>
-                        {/* )} */}
+                        {can.includes('c-roles') && (
+                            <Link
+                                href={route('roles.create')}
+                                className="t-size3 flex items-center gap-1.5 rounded-md bg-(--primary) px-2.5 py-1.5 font-medium whitespace-nowrap text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary) hover:text-(--primary) hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:bg-(--secondary) active:text-(--primary) active:shadow-none bp360:px-3 bp360:py-2"
+                            >
+                                <PlusCircle className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
+                                Tambah Baru
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -220,22 +222,24 @@ export default function RolesIndex({
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
                                     <tr className="t-size3 text-(--primary)">
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            <Checkbox
-                                                className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
-                                                onCheckedChange={
-                                                    toggleSelectAll
-                                                }
-                                                checked={
-                                                    selected.length ===
-                                                        roles.data.length &&
-                                                    roles.data.length > 0
-                                                }
-                                            />
-                                        </th>
+                                        {can.includes('d-roles') && (
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-center font-semibold"
+                                            >
+                                                <Checkbox
+                                                    className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
+                                                    onCheckedChange={
+                                                        toggleSelectAll
+                                                    }
+                                                    checked={
+                                                        selected.length ===
+                                                            roles.data.length &&
+                                                        roles.data.length > 0
+                                                    }
+                                                />
+                                            </th>
+                                        )}
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
@@ -260,12 +264,15 @@ export default function RolesIndex({
                                         >
                                             <span>Jumlah Fitur</span>
                                         </th>
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            <span>Aksi</span>
-                                        </th>
+                                        {(can.includes('u-roles') ||
+                                            can.includes('d-roles')) && (
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-center font-semibold"
+                                            >
+                                                <span>Aksi</span>
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -274,19 +281,21 @@ export default function RolesIndex({
                                             key={role.id}
                                             className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                         >
-                                            <td className="px-4 py-2 text-center">
-                                                <Checkbox
-                                                    className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
-                                                    onCheckedChange={() =>
-                                                        toggleSelection(
+                                            {can.includes('d-roles') && (
+                                                <td className="px-4 py-2 text-center">
+                                                    <Checkbox
+                                                        className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
+                                                        onCheckedChange={() =>
+                                                            toggleSelection(
+                                                                role.id.toString(),
+                                                            )
+                                                        }
+                                                        checked={selected.includes(
                                                             role.id.toString(),
-                                                        )
-                                                    }
-                                                    checked={selected.includes(
-                                                        role.id.toString(),
-                                                    )}
-                                                />
-                                            </td>
+                                                        )}
+                                                    />
+                                                </td>
+                                            )}
                                             <td
                                                 scope="row"
                                                 className="px-4 py-2 text-center font-medium"
@@ -304,46 +313,51 @@ export default function RolesIndex({
                                                     {role.features_count} Fitur
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2 text-center">
-                                                <div className="flex justify-center space-x-2">
-                                                    {/* {can.includes(
-                                                                'u-roles',
-                                                            ) && ( */}
-                                                    <Link
-                                                        href={route(
-                                                            'roles.edit',
-                                                            role.id,
+                                            {(can.includes('u-roles') ||
+                                                can.includes('d-roles')) && (
+                                                <td className="px-4 py-2 text-center">
+                                                    <div className="flex justify-center space-x-2">
+                                                        {can.includes(
+                                                            'u-roles',
+                                                        ) && (
+                                                            <Link
+                                                                href={route(
+                                                                    'roles.edit',
+                                                                    role.id,
+                                                                )}
+                                                                className="inline-flex items-center gap-1 rounded-md bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 ring-[1.7px] ring-(--secondary)/50 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] hover:ring-(--secondary)/70 active:translate-y-0.5 active:bg-(--secondary)/50 active:shadow-none active:ring-(--secondary)/70 bp360:px-3 bp360:py-2"
+                                                            >
+                                                                <Pencil className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
+                                                                Ubah
+                                                            </Link>
                                                         )}
-                                                        className="inline-flex items-center gap-1 rounded-md bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 ring-[1.7px] ring-(--secondary)/50 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] hover:ring-(--secondary)/70 active:translate-y-0.5 active:bg-(--secondary)/50 active:shadow-none active:ring-(--secondary)/70 bp360:px-3 bp360:py-2"
-                                                    >
-                                                        <Pencil className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
-                                                        Ubah
-                                                    </Link>
-                                                    {/* )} */}
-                                                    {/* Untuk single delete */}
-                                                    {/* {can.includes(
-                                                                'd-roles',
-                                                            ) && ( */}
-                                                    <SingleDeleteDialog
-                                                        title="Peran"
-                                                        itemName={role.name}
-                                                        label="Hapus"
-                                                        onConfirm={() =>
-                                                            router.delete(
-                                                                destroy(
-                                                                    roleRouteArg(
-                                                                        role.id,
-                                                                    ),
-                                                                ).url,
-                                                                {
-                                                                    preserveScroll: true,
-                                                                },
-                                                            )
-                                                        }
-                                                    />
-                                                    {/* )} */}
-                                                </div>
-                                            </td>
+                                                        {/* Untuk single delete */}
+                                                        {can.includes(
+                                                            'd-roles',
+                                                        ) && (
+                                                            <SingleDeleteDialog
+                                                                title="Peran"
+                                                                itemName={
+                                                                    role.name
+                                                                }
+                                                                label="Hapus"
+                                                                onConfirm={() =>
+                                                                    router.delete(
+                                                                        destroy(
+                                                                            roleRouteArg(
+                                                                                role.id,
+                                                                            ),
+                                                                        ).url,
+                                                                        {
+                                                                            preserveScroll: true,
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>

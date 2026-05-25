@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,6 +48,13 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'nav' => fn () => Menu::getMenu(),
+            'can' => fn () => $request->user()
+                ? $request->user()->getAllPermissions()->pluck('name')->toArray()
+                : [],
+            'hasRole' => fn () => $request->user()
+                ? $request->user()->getRoleNames()->toArray()
+                : [],
         ];
     }
 }

@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Filter } from 'lucide-react';
 import { useState } from 'react';
 
@@ -72,6 +72,8 @@ export default function PermissionsIndex({
     sort: string | null;
 }) {
     const [selected, setSelected] = useState<string[]>([]);
+
+    const { can }: any = usePage().props;
 
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -196,22 +198,24 @@ export default function PermissionsIndex({
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                        {selected.length > 0 && (
-                            <BulkDeleteDialog
-                                title="Hak Akses"
-                                selectedCount={selected.length}
-                                onConfirm={() => {
-                                    router.post(
-                                        bulkDelete().url,
-                                        { ids: selected },
-                                        {
-                                            preserveScroll: true,
-                                            onSuccess: () => setSelected([]),
-                                        },
-                                    );
-                                }}
-                            />
-                        )}
+                        {selected.length > 0 &&
+                            can.includes('d-permissions') && (
+                                <BulkDeleteDialog
+                                    title="Hak Akses"
+                                    selectedCount={selected.length}
+                                    onConfirm={() => {
+                                        router.post(
+                                            bulkDelete().url,
+                                            { ids: selected },
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    setSelected([]),
+                                            },
+                                        );
+                                    }}
+                                />
+                            )}
                     </div>
                     <div className="flex items-center gap-2 justify-self-end">
                         <Entries
@@ -219,9 +223,9 @@ export default function PermissionsIndex({
                             search={search}
                             entries={entries}
                         />
-                        {/* {can.includes('c-permissions') && ( */}
-                        <AddModalPermission features={features} />
-                        {/* )} */}
+                        {can.includes('c-permissions') && (
+                            <AddModalPermission features={features} />
+                        )}
                     </div>
                 </div>
 
@@ -231,23 +235,26 @@ export default function PermissionsIndex({
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
                                     <tr className="t-size3 text-(--primary)">
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            <Checkbox
-                                                className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
-                                                onCheckedChange={
-                                                    toggleSelectAll
-                                                }
-                                                checked={
-                                                    selected.length ===
+                                        {can.includes('d-permissions') && (
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-center font-semibold"
+                                            >
+                                                <Checkbox
+                                                    className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
+                                                    onCheckedChange={
+                                                        toggleSelectAll
+                                                    }
+                                                    checked={
+                                                        selected.length ===
+                                                            permissions.data
+                                                                .length &&
                                                         permissions.data
-                                                            .length &&
-                                                    permissions.data.length > 0
-                                                }
-                                            />
-                                        </th>
+                                                            .length > 0
+                                                    }
+                                                />
+                                            </th>
+                                        )}
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
@@ -272,12 +279,15 @@ export default function PermissionsIndex({
                                         >
                                             <span>Izin Menu</span>
                                         </th>
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            <span>Aksi</span>
-                                        </th>
+                                        {(can.includes('u-permissions') ||
+                                            can.includes('d-permissions')) && (
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-center font-semibold"
+                                            >
+                                                <span>Aksi</span>
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -287,19 +297,23 @@ export default function PermissionsIndex({
                                                 key={permission.id}
                                                 className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                             >
-                                                <td className="px-4 py-2 text-center">
-                                                    <Checkbox
-                                                        className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
-                                                        onCheckedChange={() =>
-                                                            toggleSelection(
+                                                {can.includes(
+                                                    'd-permissions',
+                                                ) && (
+                                                    <td className="px-4 py-2 text-center">
+                                                        <Checkbox
+                                                            className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
+                                                            onCheckedChange={() =>
+                                                                toggleSelection(
+                                                                    permission.id.toString(),
+                                                                )
+                                                            }
+                                                            checked={selected.includes(
                                                                 permission.id.toString(),
-                                                            )
-                                                        }
-                                                        checked={selected.includes(
-                                                            permission.id.toString(),
-                                                        )}
-                                                    />
-                                                </td>
+                                                            )}
+                                                        />
+                                                    </td>
+                                                )}
                                                 <td
                                                     scope="row"
                                                     className="px-4 py-2 text-center font-medium"
@@ -315,44 +329,54 @@ export default function PermissionsIndex({
                                                 <td className="px-4 py-2 text-center font-medium">
                                                     {permission.feature || '-'}
                                                 </td>
-                                                <td className="px-4 py-2 text-center">
-                                                    <div className="flex justify-center space-x-2">
-                                                        {/* {can.includes(
+                                                {(can.includes(
+                                                    'u-permissions',
+                                                ) ||
+                                                    can.includes(
+                                                        'd-permissions',
+                                                    )) && (
+                                                    <td className="px-4 py-2 text-center">
+                                                        <div className="flex justify-center space-x-2">
+                                                            {can.includes(
                                                                 'u-permissions',
-                                                            ) && ( */}
-                                                        <EditModalPermission
-                                                            features={features}
-                                                            permission={
-                                                                permission
-                                                            }
-                                                        />
-                                                        {/* )} */}
-                                                        {/* Untuk single delete */}
-                                                        {/* {can.includes(
+                                                            ) && (
+                                                                <EditModalPermission
+                                                                    features={
+                                                                        features
+                                                                    }
+                                                                    permission={
+                                                                        permission
+                                                                    }
+                                                                />
+                                                            )}
+                                                            {/* Untuk single delete */}
+                                                            {can.includes(
                                                                 'd-permissions',
-                                                            ) && ( */}
-                                                        <SingleDeleteDialog
-                                                            title="Hak Akses"
-                                                            itemName={
-                                                                permission.name
-                                                            }
-                                                            label="Hapus"
-                                                            onConfirm={() =>
-                                                                router.delete(
-                                                                    destroy(
-                                                                        permissionRouteArg(
-                                                                            permission.id,
-                                                                        ),
-                                                                    ).url,
-                                                                    {
-                                                                        preserveScroll: true,
-                                                                    },
-                                                                )
-                                                            }
-                                                        />
-                                                        {/* )} */}
-                                                    </div>
-                                                </td>
+                                                            ) && (
+                                                                <SingleDeleteDialog
+                                                                    title="Hak Akses"
+                                                                    itemName={
+                                                                        permission.name
+                                                                    }
+                                                                    label="Hapus"
+                                                                    onConfirm={() =>
+                                                                        router.delete(
+                                                                            destroy(
+                                                                                permissionRouteArg(
+                                                                                    permission.id,
+                                                                                ),
+                                                                            )
+                                                                                .url,
+                                                                            {
+                                                                                preserveScroll: true,
+                                                                            },
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ),
                                     )}

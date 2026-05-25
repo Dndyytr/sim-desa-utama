@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+// use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Permission;
 
 #[Fillable([
@@ -29,11 +29,11 @@ class Menu extends Model
      * - Ketika data menu disimpan (saved) atau dihapus (deleted), cache 'menus_all_active' dibersihkan (forget).
      * - Ini menjamin data navigasi yang ditampilkan ke user selalu up-to-date tanpa perlu query DB terus-menerus.
      */
-    protected static function booted(): void
-    {
-        static::saved(fn () => Cache::forget('menus_all_active'));
-        static::deleted(fn () => Cache::forget('menus_all_active'));
-    }
+    // protected static function booted(): void
+    // {
+    //     static::saved(fn () => Cache::forget('menus_all_active'));
+    //     static::deleted(fn () => Cache::forget('menus_all_active'));
+    // }
 
     public function children()
     {
@@ -55,12 +55,17 @@ class Menu extends Model
          * 2. Cache diatur agar disimpan selamanya (rememberForever), dan hanya dihapus (invalidate) saat ada perubahan data melalui event model 'booted' di atas.
          * 3. Pemanggilan query eager-loading 'children' juga otomatis ikut ter-cache.
          */
-        $menus = Cache::rememberForever('menus_all_active', function () {
-            return self::with('children')
-                ->whereNull('parent_id')
-                ->where('status', 'enabled')
-                ->get();
-        });
+        // $menus = Cache::rememberForever('menus_all_active', function () {
+        //     return self::with('children')
+        //         ->whereNull('parent_id')
+        //         ->where('status', 'enabled')
+        //         ->get();
+        // });
+
+        $menus = self::with('children')
+            ->whereNull('parent_id')
+            ->where('status', 'enabled')
+            ->get();
 
         foreach ($menus as $key => $menu) {
 

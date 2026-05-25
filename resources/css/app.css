@@ -252,7 +252,7 @@
     } */
 
     html {
-        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent;
+        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent [&::-webkit-scrollbar-thumb]:rounded-full;
     }
 
     /* body {
@@ -312,10 +312,10 @@
 
     /* scrollbar */
     .sb-primary {
-        @apply scrollbar-thin scrollbar-thumb-(--primary) scrollbar-track-transparent;
+        @apply scrollbar-thin scrollbar-thumb-(--primary) scrollbar-track-transparent [&::-webkit-scrollbar-thumb]:rounded-full;
     }
 
     .sb-secondary {
-        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent;
+        @apply scrollbar-thin scrollbar-thumb-(--secondary) scrollbar-track-transparent [&::-webkit-scrollbar-thumb]:rounded-full;
     }
 }

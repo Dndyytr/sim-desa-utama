@@ -5,6 +5,7 @@ namespace Tests\Feature\Admins;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -171,6 +172,13 @@ class UserIndexTest extends TestCase
         $user = User::factory()->create([
             'created_at' => $createdAt ?? now()->subYears(5),
         ]);
+
+        // Buat dan berikan izin 'r-users' agar dapat melewati middleware pencarian izin di UserController
+        $permission = Permission::firstOrCreate([
+            'name' => 'r-users',
+            'guard_name' => 'web',
+        ]);
+        $user->givePermissionTo($permission);
 
         $this->actingAs($user);
 
