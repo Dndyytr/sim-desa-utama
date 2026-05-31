@@ -200,7 +200,7 @@ export default function AddModalTypeService() {
                                         Batal
                                     </Button>
                                 </DialogClose>
-                                <div className="flex gap-2 ml-auto">
+                                <div className="ml-auto flex gap-2">
                                     <Button
                                         type="button"
                                         onClick={() => {

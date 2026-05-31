@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Sekdes;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListingRequest;
 use App\Models\TypeService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,7 +43,7 @@ class TypeServiceController extends Controller implements HasMiddleware
         $sort = $request->query('sort') ?? null;
 
         // 5. Resolve sort lewat whitelist; input tidak dikenal otomatis fallback ke default ListingRequest.
-        if (!in_array($status, ['active', 'inactive'], true)) {
+        if (! in_array($status, ['active', 'inactive'], true)) {
             $status = null;
         }
 
@@ -64,9 +64,9 @@ class TypeServiceController extends Controller implements HasMiddleware
         $typeServices = TypeService::query()
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('service_code', 'like', $search . '%')
-                        ->orWhere('service_name', 'like', $search . '%')
-                        ->orWhere('description', 'like', $search . '%');
+                    $q->where('service_code', 'like', $search.'%')
+                        ->orWhere('service_name', 'like', $search.'%')
+                        ->orWhere('description', 'like', $search.'%');
                 });
             })
             ->when($status === 'active', function ($query) {
@@ -135,10 +135,11 @@ class TypeServiceController extends Controller implements HasMiddleware
 
             $typeService->save();
 
-            return redirect()->route('type-services.index')->with('success', 'Data ' . $typeService->service_name . ' berhasil disimpan.');
+            return redirect()->route('type-services.index')->with('success', 'Data '.$typeService->service_name.' berhasil disimpan.');
         } catch (\Throwable $th) {
-            //throw $th;
-            Log::error('Gagal membuat jenis layanan: ' . $th->getMessage());
+            // throw $th;
+            Log::error('Gagal membuat jenis layanan: '.$th->getMessage());
+
             return redirect()->route('type-services.index')->with('error', 'Oops, terjadi kesalahan!');
         }
     }
@@ -165,7 +166,7 @@ class TypeServiceController extends Controller implements HasMiddleware
     public function update(Request $request, TypeService $typeService)
     {
         $validated = $request->validate([
-            'service_code' => 'required|string|max:255|unique:type_services,service_code,' . $typeService->id,
+            'service_code' => 'required|string|max:255|unique:type_services,service_code,'.$typeService->id,
             'service_name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
@@ -186,10 +187,11 @@ class TypeServiceController extends Controller implements HasMiddleware
         try {
             $typeService->update($validated);
 
-            return redirect()->route('type-services.index')->with('success', 'Data ' . $typeService->service_name . ' berhasil diperbarui.');
+            return redirect()->route('type-services.index')->with('success', 'Data '.$typeService->service_name.' berhasil diperbarui.');
         } catch (\Throwable $th) {
-            //throw $th;
-            Log::error('Gagal memperbarui jenis layanan: ' . $th->getMessage());
+            // throw $th;
+            Log::error('Gagal memperbarui jenis layanan: '.$th->getMessage());
+
             return redirect()->route('type-services.index')->with('error', 'Oops, terjadi kesalahan!');
         }
     }
@@ -203,7 +205,7 @@ class TypeServiceController extends Controller implements HasMiddleware
             /** @var TypeService $typeService */
             $typeService->delete(); // @phpstan-ignore-line
 
-            return redirect()->route('type-services.index')->with('success', 'Data ' . $typeService->service_name . ' berhasil dihapus.');
+            return redirect()->route('type-services.index')->with('success', 'Data '.$typeService->service_name.' berhasil dihapus.');
         } else {
             return redirect()->route('type-services.index')->with('error', 'Data tidak ditemukan.');
         }
@@ -218,7 +220,7 @@ class TypeServiceController extends Controller implements HasMiddleware
                 // Gunakan get() lalu delete() per item agar Model Event terpicu
                 // (whereIn()->delete() adalah query langsung, tidak memicu Event)
                 /** @var Collection <int, TypeService> $typeServices */
-                TypeService::whereIn('id', $ids, 'and', false)->get()->each(fn($typeService) => $typeService->delete());
+                TypeService::whereIn('id', $ids, 'and', false)->get()->each(fn ($typeService) => $typeService->delete());
 
                 return redirect()->route('type-services.index')
                     ->with('success', 'Data yang dipilih berhasil dihapus.');
@@ -226,7 +228,7 @@ class TypeServiceController extends Controller implements HasMiddleware
 
             return redirect()->route('type-services.index')->with('error', 'Data tidak ditemukan.');
         } catch (\Exception $e) {
-            Log::error('Gagal bulk delete jenis layanan: ' . $e->getMessage());
+            Log::error('Gagal bulk delete jenis layanan: '.$e->getMessage());
 
             return redirect()->route('type-services.index')->with('error', 'Oops, terjadi kesalahan!');
         }
