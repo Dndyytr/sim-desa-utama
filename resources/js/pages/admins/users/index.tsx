@@ -282,7 +282,7 @@ export default function UsersIndex({
                             />
                         )}
                     </div>
-                    <div className="flex items-center gap-2 justify-self-end">
+                    <div className="flex flex-wrap items-center gap-2 justify-self-end">
                         <Entries
                             route={route('users.index')}
                             search={search}
@@ -428,7 +428,7 @@ export default function UsersIndex({
                                                                     'users.edit',
                                                                     user.id,
                                                                 )}
-                                                                className="inline-flex items-center gap-1 rounded-md bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 ring-[1.7px] ring-(--secondary)/50 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] hover:ring-(--secondary)/70 active:translate-y-0.5 active:bg-(--secondary)/50 active:shadow-none active:ring-(--secondary)/70 bp360:px-3 bp360:py-2"
+                                                                className="inline-flex items-center gap-1 rounded-md border-[1.7px] border-(--secondary)/50 bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-(--secondary)/70 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:border-(--secondary)/70 active:bg-(--secondary)/50 active:shadow-none bp360:px-3 bp360:py-2"
                                                             >
                                                                 <Pencil className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                                                 Ubah

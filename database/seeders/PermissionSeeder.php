@@ -38,6 +38,12 @@ class PermissionSeeder extends Seeder
         ['name' => 'u-users', 'guard_name' => 'web', 'feature' => 'user', 'title' => 'Update'],
         ['name' => 'd-users', 'guard_name' => 'web', 'feature' => 'user', 'title' => 'Delete'],
 
+        // Type Service
+        ['name' => 'r-type-services', 'guard_name' => 'web', 'feature' => 'type-service', 'title' => 'Read'],
+        ['name' => 'c-type-services', 'guard_name' => 'web', 'feature' => 'type-service', 'title' => 'Create'],
+        ['name' => 'u-type-services', 'guard_name' => 'web', 'feature' => 'type-service', 'title' => 'Update'],
+        ['name' => 'd-type-services', 'guard_name' => 'web', 'feature' => 'type-service', 'title' => 'Delete'],
+
     ];
 
     /**

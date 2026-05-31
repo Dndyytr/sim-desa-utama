@@ -67,6 +67,7 @@ export function IconSelect({ value, onChange }: IconSelectProps) {
                 <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
+                    autoFocus
                     placeholder="Cari ikon..."
                     className="mb-2 bg-primary text-white placeholder:text-white/60 focus-visible:bg-primary"
                 />

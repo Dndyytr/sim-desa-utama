@@ -33,11 +33,29 @@ interface Feature {
     title: string;
     icon: string;
     locale: string;
+    parent_id?: number | string | null;
     permissions: Permission[];
 }
 
 export default function RolesCreate({ features }: { features: Feature[] }) {
     const filteredFeatures = features;
+    const parentFeatures = filteredFeatures.filter(
+        (feature) => !feature.parent_id,
+    );
+    const childFeaturesByParentId = filteredFeatures.reduce<
+        Record<number, Feature[]>
+    >((children, feature) => {
+        if (!feature.parent_id) {
+            return children;
+        }
+
+        const parentId = Number(feature.parent_id);
+
+        return {
+            ...children,
+            [parentId]: [...(children[parentId] ?? []), feature],
+        };
+    }, {});
     const [selectedPermissions, setSelectedPermissions] = useState<number[]>(
         [],
     );
@@ -148,6 +166,36 @@ export default function RolesCreate({ features }: { features: Feature[] }) {
 
         return ShieldCog;
     };
+
+    const renderPermissionItems = (feature: Feature) =>
+        feature.permissions.map((permission) => {
+            const PermissionIcon = getPermissionIcon(permission.title);
+            const isSelected = selectedPermissions.includes(permission.id);
+
+            return (
+                <div
+                    key={permission.id}
+                    onClick={(event) =>
+                        handlePermissionItemClick(
+                            event,
+                            permission.id,
+                            isSelected,
+                        )
+                    }
+                    className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 shadow-[0_0_3.5px_0_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5 ${permissionItemClass(isSelected)}`}
+                >
+                    <Checkbox
+                        id={`permission_${permission.id}`}
+                        checked={isSelected}
+                        className="pointer-events-none size-3.5 rounded-[3.7px] border-(--font-color)/70 data-[state=checked]:border-secondary data-[state=checked]:bg-secondary data-[state=checked]:text-primary bp360:size-3.75 bp400:size-4 md:size-4.25 lg:size-4.5 xl:size-4.75 2xl:size-5 [&>span>svg]:size-3 bp360:[&>span>svg]:size-3.25 bp400:[&>span>svg]:size-3.5 md:[&>span>svg]:size-3.75 lg:[&>span>svg]:size-4 xl:[&>span>svg]:size-4.25 2xl:[&>span>svg]:size-4.5"
+                    />
+                    <PermissionIcon className="size-3.5 shrink-0 bp360:size-3.75 bp400:size-4 md:size-4.25 lg:size-4.75 xl:size-5.25 2xl:size-5.75" />
+                    <span className="t-size2 font-medium">
+                        {permission.title}
+                    </span>
+                </div>
+            );
+        });
 
     return (
         <>
@@ -343,16 +391,20 @@ export default function RolesCreate({ features }: { features: Feature[] }) {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
-                                        {filteredFeatures.map((feature) => {
+                                        {parentFeatures.map((feature) => {
                                             const IconComponent =
                                                 getFeatureIcon(feature.icon);
                                             const featureChecked =
                                                 isFeatureAllSelected(feature);
+                                            const childFeatures =
+                                                childFeaturesByParentId[
+                                                    feature.id
+                                                ] ?? [];
 
                                             return (
                                                 <div
                                                     key={feature.id}
-                                                    className="inline-flex flex-col gap-2 rounded-md bg-white p-2 shadow-[0_0_3.5px_0_rgba(0,0,0,0.2)] bp400:flex-row md:p-2.5 xl:p-3 2xl:p-3.5"
+                                                    className="inline-flex flex-col flex-wrap gap-2 rounded-md bg-white p-2 shadow-[0_0_3.5px_0_rgba(0,0,0,0.2)] bp400:flex-row md:p-2.5 xl:p-3 2xl:p-3.5"
                                                 >
                                                     <div className="flex items-start gap-2">
                                                         <Checkbox
@@ -383,54 +435,78 @@ export default function RolesCreate({ features }: { features: Feature[] }) {
                                                             {feature.title}
                                                         </h3>
                                                         <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-2 2xl:grid-cols-4">
-                                                            {feature.permissions.map(
+                                                            {renderPermissionItems(
+                                                                feature,
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Child Menu */}
+                                                    {childFeatures.length >
+                                                        0 && (
+                                                        <div className="inline-flex flex-col flex-wrap gap-2 rounded-md bg-white p-2 shadow-[0_0_3.5px_0_rgba(0,0,0,0.2)] bp400:flex-row md:p-2.5 xl:p-3 2xl:p-3.5">
+                                                            {childFeatures.map(
                                                                 (
-                                                                    permission,
+                                                                    childFeature,
                                                                 ) => {
-                                                                    const PermissionIcon =
-                                                                        getPermissionIcon(
-                                                                            permission.title,
+                                                                    const ChildIcon =
+                                                                        getFeatureIcon(
+                                                                            childFeature.icon,
                                                                         );
-                                                                    const isSelected =
-                                                                        selectedPermissions.includes(
-                                                                            permission.id,
+                                                                    const childChecked =
+                                                                        isFeatureAllSelected(
+                                                                            childFeature,
                                                                         );
 
                                                                     return (
-                                                                        <div
-                                                                            key={
-                                                                                permission.id
-                                                                            }
-                                                                            onClick={(
-                                                                                event,
-                                                                            ) =>
-                                                                                handlePermissionItemClick(
-                                                                                    event,
-                                                                                    permission.id,
-                                                                                    isSelected,
-                                                                                )
-                                                                            }
-                                                                            className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 shadow-[0_0_3.5px_0_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0.5 ${permissionItemClass(isSelected)}`}
-                                                                        >
-                                                                            <Checkbox
-                                                                                id={`permission_${permission.id}`}
-                                                                                checked={
-                                                                                    isSelected
+                                                                        <>
+                                                                            <div
+                                                                                key={
+                                                                                    childFeature.id
                                                                                 }
-                                                                                className="pointer-events-none size-3.5 rounded-[3.7px] border-(--font-color)/70 data-[state=checked]:border-secondary data-[state=checked]:bg-secondary data-[state=checked]:text-primary bp360:size-3.75 bp400:size-4 md:size-4.25 lg:size-4.5 xl:size-4.75 2xl:size-5 [&>span>svg]:size-3 bp360:[&>span>svg]:size-3.25 bp400:[&>span>svg]:size-3.5 md:[&>span>svg]:size-3.75 lg:[&>span>svg]:size-4 xl:[&>span>svg]:size-4.25 2xl:[&>span>svg]:size-4.5"
-                                                                            />
-                                                                            <PermissionIcon className="size-3.5 shrink-0 bp360:size-3.75 bp400:size-4 md:size-4.25 lg:size-4.75 xl:size-5.25 2xl:size-5.75" />
-                                                                            <span className="t-size2 font-medium">
-                                                                                {
-                                                                                    permission.title
-                                                                                }
-                                                                            </span>
-                                                                        </div>
+                                                                                className="flex items-start gap-2"
+                                                                            >
+                                                                                <Checkbox
+                                                                                    id={`feature_${childFeature.id}`}
+                                                                                    checked={
+                                                                                        childChecked
+                                                                                    }
+                                                                                    className="mt-2 size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
+                                                                                    onCheckedChange={(
+                                                                                        checked,
+                                                                                    ) =>
+                                                                                        toggleFeature(
+                                                                                            childFeature,
+                                                                                            checked ===
+                                                                                                true,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                                <Label
+                                                                                    htmlFor={`feature_${childFeature.id}`}
+                                                                                    className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-md bg-(--primary)/10 bp360:size-9.25 bp400:size-9.5 md:size-10 lg:size-10.5 xl:size-11 2xl:size-11.5"
+                                                                                >
+                                                                                    <ChildIcon className="size-5.5 text-(--primary) bp360:size-5.75 bp400:size-6 md:size-6.25 lg:size-6.75 xl:size-7.25 2xl:size-7.75" />
+                                                                                </Label>
+                                                                            </div>
+                                                                            <div className="flex flex-col gap-2">
+                                                                                <h3 className="t-size3 font-semibold text-(--primary)">
+                                                                                    {
+                                                                                        childFeature.title
+                                                                                    }
+                                                                                </h3>
+                                                                                <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-2 2xl:grid-cols-4">
+                                                                                    {renderPermissionItems(
+                                                                                        childFeature,
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </>
                                                                     );
                                                                 },
                                                             )}
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
