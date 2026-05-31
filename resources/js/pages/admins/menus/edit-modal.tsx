@@ -328,7 +328,7 @@ export default function EditModalMenu({ menus, menu }: EditModalMenuProps) {
                                         Batal
                                     </Button>
                                 </DialogClose>
-                                <div className="flex gap-2">
+                                <div className="ml-auto flex gap-2">
                                     <Button
                                         type="button"
                                         onClick={() => {

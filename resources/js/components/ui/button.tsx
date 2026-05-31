@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { edit } from '@/routes/profile';
 
 const buttonVariants = cva(
-    "inline-flex cursor-pointer items-center justify-center gap-1 rounded-md font-medium whitespace-nowrap transition-all duration-300 ease-in-out outline-none disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-md font-medium whitespace-nowrap transition-all duration-300 ease-in-out outline-none disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0',
     {
         variants: {
             variant: {
@@ -18,10 +18,10 @@ const buttonVariants = cva(
                     'bg-(--secondary)/20 text-(--primary) hover:-translate-y-0.5 hover:bg-(--secondary)/50 active:translate-y-0.5 active:bg-(--secondary)/50',
                 secondary:
                     'bg-secondary text-secondary-foreground shadow-xs hover:-translate-y-0.5 hover:bg-secondary/80 active:translate-y-0.5',
-                ghost: 'bg-white text-primary ring-[1.5px] ring-(--primary)/50 hover:-translate-y-0.5 hover:bg-(--primary)/30 hover:ring-(--primary)/80 active:translate-y-0.5 active:bg-(--primary)/30 active:ring-(--primary)/80',
+                ghost: 'border-[1.5px] border-(--primary)/50 bg-white text-primary hover:-translate-y-0.5 hover:border-(--primary)/80 hover:bg-(--primary)/30 active:translate-y-0.5 active:border-(--primary)/80 active:bg-(--primary)/30',
                 link: 'text-primary underline-offset-4 hover:-translate-y-0.5 hover:underline active:translate-y-0.5',
-                error: 'bg-red-100 text-red-600 ring-[1.7px] ring-red-300 hover:-translate-y-0.5 hover:bg-red-200 hover:ring-red-400 active:translate-y-0.5 active:bg-red-300 active:ring-red-400',
-                edit: 'bg-(--secondary)/10 text-yellow-500 ring-[1.7px] ring-(--secondary)/50 hover:-translate-y-0.5 hover:bg-(--secondary)/50 hover:ring-(--secondary)/70 active:translate-y-0.5 active:bg-(--secondary)/50 active:ring-(--secondary)/70',
+                error: 'border-[1.7px] border-red-300 bg-red-100 text-red-600 hover:-translate-y-0.5 hover:border-red-400 hover:bg-red-200 active:translate-y-0.5 active:border-red-400 active:bg-red-300',
+                edit: 'border-[1.7px] border-(--secondary)/50 bg-(--secondary)/10 text-yellow-500 hover:-translate-y-0.5 hover:border-(--secondary)/70 hover:bg-(--secondary)/50 active:translate-y-0.5 active:border-(--secondary)/70 active:bg-(--secondary)/50',
                 none: '',
                 paginateActive: 'bg-(--primary) text-white',
                 paginateInactive:

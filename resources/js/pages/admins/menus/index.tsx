@@ -117,7 +117,7 @@ export default function MenusIndex({
         });
     };
 
-    // Satu dropdown Filter berisi 3 jenis value: sort, role, dan verified.
+    // Satu dropdown Filter berisi 3 jenis value: sort.
     // Memilih role/status akan menghapus filter lain agar dropdown hanya punya satu pilihan aktif.
     const handleFilterChange = (value: string) => {
         const [type, selectedValue] = value.split(':');
@@ -155,7 +155,7 @@ export default function MenusIndex({
                 </div>
 
                 <div className="grid items-center justify-between gap-2 md:grid-cols-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Select
                             value={currentFilter}
                             onValueChange={handleFilterChange}
@@ -205,7 +205,7 @@ export default function MenusIndex({
                             />
                         )}
                     </div>
-                    <div className="flex items-center gap-2 justify-self-end">
+                    <div className="flex flex-wrap items-center gap-2 justify-self-end">
                         <Entries
                             route={route('menus.index')}
                             search={search}

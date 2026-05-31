@@ -63,6 +63,17 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id', // Default locale
         ],
+        [
+            'id' => 6,
+            'parent_id' => null,
+            'title' => 'Kelola Jenis Layanan',
+            'url' => 'type-services.index',
+            'tag' => 'type-services',
+            'icon' => 'Wrench',
+            'permission' => 'type-service',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
         // Tambahkan menu lainnya sesuai kebutuhan
     ];
 

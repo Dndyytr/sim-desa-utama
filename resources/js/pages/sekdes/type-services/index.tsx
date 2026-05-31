@@ -14,45 +14,36 @@ import {
     SelectGroup,
     SelectItem,
     SelectLabel,
+    SelectSeparator,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
 import { SingleDeleteDialog } from '@/components/ui/single-delete';
-import { bulkDelete, destroy, index } from '@/routes/permissions';
+import { bulkDelete, destroy, index } from '@/routes/type-services';
 
-import AddModalPermission from './add-modal';
-import EditModalPermission from './edit-modal';
+import AddModalTypeService from './add-modal';
+import EditModalTypeService from './edit-modal';
 
-interface Menu {
+interface TypeService {
     id: number;
-    title: string;
-    url?: string;
-    tag?: string;
-    permission: string;
-    status?: string;
-    locale?: string;
-    icon?: string;
-    parent_id?: string;
+    service_code: string;
+    service_name: string;
+    description: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
-interface Permission {
-    id: number;
-    name: string;
-    guard_name: string;
-    title: string;
-    feature: string;
-}
-
-export default function PermissionsIndex({
-    permissions,
-    features,
-    // i,
+export default function TypeServicesIndex({
+    typeServices,
     entries,
     search,
     sort,
+    status,
+    hasFilter,
 }: {
-    permissions: {
-        data: Permission[];
+    typeServices: {
+        data: TypeService[];
         from: number;
         to: number;
         total: number;
@@ -65,11 +56,11 @@ export default function PermissionsIndex({
         prev_page_url: string | null;
         next_page_url: string | null;
     };
-    features: Menu[];
-    i: number;
     entries: any;
     search: string;
-    sort: string | null;
+    sort: string;
+    status?: string | null;
+    hasFilter: boolean;
 }) {
     const [selected, setSelected] = useState<string[]>([]);
 
@@ -78,7 +69,9 @@ export default function PermissionsIndex({
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
             setSelected(
-                permissions.data.map((permission) => permission.id.toString()),
+                typeServices.data.map((typeService) =>
+                    typeService.id.toString(),
+                ),
             );
         } else {
             setSelected([]);
@@ -93,15 +86,18 @@ export default function PermissionsIndex({
         );
     };
 
-    // Check if pagination should be shown
-    const shouldShowPagination = permissions.last_page > 1;
+    const currentStatus = status || 'all';
 
-    const currentFilter =
-        sort && sort !== 'created_asc' ? `sort:${sort}` : undefined;
+    const currentFilter = hasFilter
+        ? status
+            ? `status:${currentStatus}`
+            : `sort:${sort}`
+        : undefined;
 
     // Query filter yang harus tetap terbawa saat user mencari atau mengganti jumlah entries.
     const queryFilters = {
-        sort: sort && sort !== 'created_asc' ? sort : undefined,
+        sort: hasFilter ? sort : undefined,
+        status: status || undefined,
     };
 
     // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih.
@@ -127,7 +123,7 @@ export default function PermissionsIndex({
         });
     };
 
-    // Satu dropdown Filter berisi 3 jenis value: sort, role, dan verified.
+    // Satu dropdown Filter berisi 3 jenis value: sort.
     // Memilih role/status akan menghapus filter lain agar dropdown hanya punya satu pilihan aktif.
     const handleFilterChange = (value: string) => {
         const [type, selectedValue] = value.split(':');
@@ -135,35 +131,53 @@ export default function PermissionsIndex({
         if (type === 'sort') {
             handleQueryChange({
                 sort: selectedValue,
+                status: undefined,
+            });
+
+            return;
+        }
+
+        if (type === 'status') {
+            handleQueryChange({
+                sort: 'created_asc',
+                status: selectedValue === 'all' ? undefined : selectedValue,
             });
         }
     };
 
-    type DestroyPermissionArg = Parameters<typeof destroy>[0];
+    // Check if pagination should be shown
+    const shouldShowPagination = typeServices.last_page > 1;
 
-    const permissionRouteArg = (id: Permission['id']) =>
-        ({ id: String(id) }) as unknown as DestroyPermissionArg;
+    // TypeService argument untuk delete
+    type DestroyTypeServiceArg = Parameters<typeof destroy>[0];
+
+    // TypeService argument untuk delete
+    const typeServiceRouteArg = (id: TypeService['id']) =>
+        ({ type_service: String(id) }) as unknown as DestroyTypeServiceArg;
 
     return (
         <>
-            <Head title="Kelola Hak Akses" />
+            <Head title="Kelola Jenis Layanan" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
+                {/* Search Bar */}
                 <div className="flex w-full max-w-full items-center gap-2 md:max-w-[70%] lg:max-w-1/2">
                     <SearchBar
-                        route={route('permissions.index')}
+                        route={route('type-services.index')}
                         search={search}
-                        formId="search-permissions"
+                        formId="search-type-services"
+                        query={{ entries, ...queryFilters }}
                     />
                     <Button
                         type="submit"
-                        form="search-permissions"
+                        form="search-type-services"
                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                     >
                         Cari
                     </Button>
                 </div>
 
+                {/* Toolbar */}
                 <div className="grid items-center justify-between gap-2 md:grid-cols-2">
                     <div className="flex flex-wrap items-center gap-2">
                         <Select
@@ -196,12 +210,25 @@ export default function PermissionsIndex({
                                         Nama Z-A
                                     </SelectItem>
                                 </SelectGroup>
+                                <SelectSeparator className="bg-(--primary)/60" />
+                                <SelectGroup>
+                                    <SelectLabel>Status</SelectLabel>
+                                    <SelectItem value="status:all">
+                                        Semua Status
+                                    </SelectItem>
+                                    <SelectItem value="status:active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="status:inactive">
+                                        Nonaktif
+                                    </SelectItem>
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
                         {selected.length > 0 &&
-                            can.includes('d-permissions') && (
+                            can.includes('d-type-services') && (
                                 <BulkDeleteDialog
-                                    title="Hak Akses"
+                                    title="Jenis Layanan"
                                     selectedCount={selected.length}
                                     onConfirm={() => {
                                         router.post(
@@ -217,25 +244,28 @@ export default function PermissionsIndex({
                                 />
                             )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 justify-self-end">
+
+                    <div className="flex items-center gap-2 justify-self-end">
                         <Entries
-                            route={route('permissions.index')}
+                            route={route('type-services.index')}
                             search={search}
                             entries={entries}
+                            query={queryFilters}
                         />
-                        {can.includes('c-permissions') && (
-                            <AddModalPermission features={features} />
+                        {can.includes('c-type-services') && (
+                            <AddModalTypeService />
                         )}
                     </div>
                 </div>
 
+                {/* Table */}
                 <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-green-50 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
-                    {permissions.data.length > 0 ? (
+                    {typeServices.data.length > 0 ? (
                         <div className="bg-white">
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
                                     <tr className="t-size3 text-(--primary)">
-                                        {can.includes('d-permissions') && (
+                                        {can.includes('d-type-services') && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
@@ -247,9 +277,9 @@ export default function PermissionsIndex({
                                                     }
                                                     checked={
                                                         selected.length ===
-                                                            permissions.data
+                                                            typeServices.data
                                                                 .length &&
-                                                        permissions.data
+                                                        typeServices.data
                                                             .length > 0
                                                     }
                                                 />
@@ -265,22 +295,30 @@ export default function PermissionsIndex({
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Judul</span>
+                                            <span>Kode Layanan</span>
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Nama</span>
+                                            <span>Nama Layanan</span>
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Izin Menu</span>
+                                            <span>Deskripsi</span>
                                         </th>
-                                        {(can.includes('u-permissions') ||
-                                            can.includes('d-permissions')) && (
+                                        <th
+                                            scope="col"
+                                            className="px-4 py-3 text-center font-semibold"
+                                        >
+                                            <span>Status</span>
+                                        </th>
+                                        {(can.includes('u-type-services') ||
+                                            can.includes(
+                                                'd-type-services',
+                                            )) && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
@@ -291,25 +329,25 @@ export default function PermissionsIndex({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {permissions.data.map(
-                                        (permission, index) => (
+                                    {typeServices.data.map(
+                                        (typeService, index) => (
                                             <tr
-                                                key={permission.id}
+                                                key={typeService.id}
                                                 className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                             >
                                                 {can.includes(
-                                                    'd-permissions',
+                                                    'd-type-services',
                                                 ) && (
                                                     <td className="px-4 py-2 text-center">
                                                         <Checkbox
                                                             className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
                                                             onCheckedChange={() =>
                                                                 toggleSelection(
-                                                                    permission.id.toString(),
+                                                                    typeService.id.toString(),
                                                                 )
                                                             }
                                                             checked={selected.includes(
-                                                                permission.id.toString(),
+                                                                typeService.id.toString(),
                                                             )}
                                                         />
                                                     </td>
@@ -318,52 +356,62 @@ export default function PermissionsIndex({
                                                     scope="row"
                                                     className="px-4 py-2 text-center font-medium"
                                                 >
-                                                    {permissions.from + index}
+                                                    {typeServices.from + index}
+                                                </td>
+                                                <td className="px-4 py-2 text-center font-bold">
+                                                    {typeService.service_code}
                                                 </td>
                                                 <td className="px-4 py-2 text-center font-medium">
-                                                    {permission.title}
+                                                    {typeService.service_name}
                                                 </td>
                                                 <td className="px-4 py-2 text-center font-medium">
-                                                    {permission.name || '-'}
+                                                    {typeService.description ||
+                                                        '-'}
                                                 </td>
                                                 <td className="px-4 py-2 text-center font-medium">
-                                                    {permission.feature || '-'}
+                                                    <span
+                                                        className={`rounded-full bg-${typeService.is_active ? '(--primary)/10' : 'red-100'} px-2.5 py-1.5 whitespace-nowrap text-${
+                                                            typeService.is_active
+                                                                ? '(--primary)'
+                                                                : 'red-600'
+                                                        }`}
+                                                    >
+                                                        {typeService.is_active
+                                                            ? 'Aktif'
+                                                            : 'Nonaktif'}
+                                                    </span>
                                                 </td>
                                                 {(can.includes(
-                                                    'u-permissions',
+                                                    'u-type-services',
                                                 ) ||
                                                     can.includes(
-                                                        'd-permissions',
+                                                        'd-type-services',
                                                     )) && (
                                                     <td className="px-4 py-2 text-center">
                                                         <div className="flex justify-center space-x-2">
                                                             {can.includes(
-                                                                'u-permissions',
+                                                                'u-type-services',
                                                             ) && (
-                                                                <EditModalPermission
-                                                                    features={
-                                                                        features
-                                                                    }
-                                                                    permission={
-                                                                        permission
+                                                                <EditModalTypeService
+                                                                    typeService={
+                                                                        typeService
                                                                     }
                                                                 />
                                                             )}
-                                                            {/* Untuk single delete */}
                                                             {can.includes(
-                                                                'd-permissions',
+                                                                'd-type-services',
                                                             ) && (
                                                                 <SingleDeleteDialog
-                                                                    title="Hak Akses"
+                                                                    title="Jenis Layanan"
                                                                     itemName={
-                                                                        permission.name
+                                                                        typeService.service_name
                                                                     }
                                                                     label="Hapus"
                                                                     onConfirm={() =>
                                                                         router.delete(
                                                                             destroy(
-                                                                                permissionRouteArg(
-                                                                                    permission.id,
+                                                                                typeServiceRouteArg(
+                                                                                    typeService.id,
                                                                                 ),
                                                                             )
                                                                                 .url,
@@ -389,7 +437,7 @@ export default function PermissionsIndex({
                                         : 'mb-7'
                                 }`}
                             >
-                                <InertiaPagination pagination={permissions} />
+                                <InertiaPagination pagination={typeServices} />
                             </div>
                         </div>
                     ) : (
@@ -398,17 +446,15 @@ export default function PermissionsIndex({
                         </div>
                     )}
                 </div>
-
-                {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
             </div>
         </>
     );
 }
 
-PermissionsIndex.layout = {
+TypeServicesIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Kelola Hak Akses',
+            title: 'Kelola Jenis Layanan',
             href: index(),
         },
     ],
