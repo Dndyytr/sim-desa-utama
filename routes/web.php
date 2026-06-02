@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Sekdes\ResidentController;
 use App\Http\Controllers\Sekdes\TypeServiceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('sekdes')->group(function () {
         Route::post('type-services/bulk-delete', [TypeServiceController::class, 'bulkDelete'])->name('type-services.bulk-delete');
         Route::resource('type-services', TypeServiceController::class);
+        Route::post('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
+        Route::resource('residents', ResidentController::class);
     });
 });
 
