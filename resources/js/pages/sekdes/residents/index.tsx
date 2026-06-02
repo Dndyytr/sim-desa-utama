@@ -1,4 +1,5 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Filter, Pencil, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,40 +20,35 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { SingleDeleteDialog } from '@/components/ui/single-delete';
-import { bulkDelete, destroy, index } from '@/routes/users';
+import { bulkDelete, destroy, index } from '@/routes/residents';
 
-interface Role {
+interface Resident {
     id: number;
+    nik: string;
+    no_kk: string;
     name: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    password: string;
-    email_verified_at: string | null;
-    roles: Role[];
+    birth_place: string;
+    birth_date: string;
+    gender: 'Laki-laki' | 'Perempuan';
+    religion: string;
+    marital_status: string;
+    occupation: string;
+    address: string;
+    is_active: boolean;
     created_at: string;
     updated_at: string;
 }
 
-// Halaman listing pengguna menerima data yang sudah diproses dari UserController@index.
-// Props di bawah berisi data tabel, daftar role untuk filter, serta state query aktif.
-export default function UsersIndex({
-    users,
-    // roles,
-    // i,
+export default function ResidentsIndex({
+    residents,
     entries,
     search,
     sort,
-    // role,
-    verified,
+    status,
     hasFilter,
-    // pagination,
 }: {
-    users: {
-        data: User[];
+    residents: {
+        data: Resident[];
         from: number;
         to: number;
         total: number;
@@ -65,43 +61,46 @@ export default function UsersIndex({
         prev_page_url: string | null;
         next_page_url: string | null;
     };
-    roles: Role[];
-    i: number;
     entries: any;
     search: string;
     sort: string;
-    role?: string | number | null;
-    verified?: string | null;
+    status?: string | null;
     hasFilter: boolean;
-    pagination?: any;
 }) {
-    // State lokal hanya menyimpan checkbox yang dipilih untuk kebutuhan bulk delete.
     const [selected, setSelected] = useState<string[]>([]);
-
     const { can }: any = usePage().props;
 
-    // Normalisasi value filter dari props agar cocok dengan format value Select.
-    // const currentRole = role ? role.toString() : 'all';
-    const currentVerified = verified || 'all';
+    const toggleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelected(
+                residents.data.map((resident) => resident.id.toString()),
+            );
+        } else {
+            setSelected([]);
+        }
+    };
 
-    // Jika belum ada filter dari URL, Select dibiarkan undefined agar placeholder "Filter" muncul.
+    const toggleSelection = (id: string) => {
+        setSelected((prev) =>
+            prev.includes(id)
+                ? prev.filter((item) => item !== id)
+                : [...prev, id],
+        );
+    };
+
+    const currentStatus = status || 'all';
+
     const currentFilter = hasFilter
-        ? // ? role
-          //     ? `role:${currentRole}`
-          // : verified
-          verified
-            ? `verified:${currentVerified}`
+        ? status
+            ? `status:${currentStatus}`
             : `sort:${sort}`
         : undefined;
 
-    // Query filter yang harus tetap terbawa saat user mencari atau mengganti jumlah entries.
     const queryFilters = {
         sort: hasFilter ? sort : undefined,
-        // role: role || undefined,
-        verified: verified || undefined,
+        status: status || undefined,
     };
 
-    // Pusat perubahan query untuk filter/sort. Nilai kosong dibuang agar URL tetap bersih.
     const handleQueryChange = (
         query: Record<string, string | number | null | undefined>,
     ) => {
@@ -124,89 +123,56 @@ export default function UsersIndex({
         });
     };
 
-    // Satu dropdown Filter berisi 3 jenis value: sort, role, dan verified.
-    // Memilih role/status akan menghapus filter lain agar dropdown hanya punya satu pilihan aktif.
     const handleFilterChange = (value: string) => {
         const [type, selectedValue] = value.split(':');
 
         if (type === 'sort') {
             handleQueryChange({
                 sort: selectedValue,
-                role: undefined,
-                verified: undefined,
+                status: undefined,
             });
 
             return;
         }
 
-        // if (type === 'role') {
-        //     handleQueryChange({
-        //         sort: 'created_asc',
-        //         role: selectedValue,
-        //         verified: undefined,
-        //     });
-
-        //     return;
-        // }
-
-        if (type === 'verified') {
+        if (type === 'status') {
             handleQueryChange({
-                sort: 'created_asc',
-                role: undefined,
-                verified: selectedValue,
+                sort: 'created_desc',
+                status: selectedValue === 'all' ? undefined : selectedValue,
             });
         }
     };
 
-    // Checkbox header memilih semua user yang tampil di halaman pagination saat ini.
-    const toggleSelectAll = (checked: boolean) => {
-        if (checked) {
-            setSelected(users.data.map((user) => user.id.toString()));
-        } else {
-            setSelected([]);
-        }
-    };
+    const shouldShowPagination = residents.last_page > 1;
 
-    // Checkbox per baris menambah/menghapus id user dari daftar bulk delete.
-    const toggleSelection = (id: string) => {
-        setSelected((prev) =>
-            prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id],
-        );
-    };
+    type DestroyResidentArg = Parameters<typeof destroy>[0];
 
-    // Check if pagination should be shown
-    const shouldShowPagination = users.last_page > 1;
-
-    type DestroyUserArg = Parameters<typeof destroy>[0];
-
-    const userRouteArg = (id: User['id']) =>
-        ({ id: String(id) }) as unknown as DestroyUserArg;
+    const residentRouteArg = (id: Resident['id']) =>
+        ({ resident: String(id) }) as unknown as DestroyResidentArg;
 
     return (
         <>
-            <Head title="Kelola Pengguna" />
+            <Head title="Kelola Data Penduduk" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
-                {/* SearchBar mengirim keyword ke server dan tetap membawa filter yang sedang aktif. */}
+                {/* Search Bar */}
                 <div className="flex w-full max-w-full items-center gap-2 md:max-w-[70%] lg:max-w-1/2">
                     <SearchBar
-                        route={route('users.index')}
+                        route={route('residents.index')}
                         search={search}
-                        formId="search-users"
+                        formId="search-residents"
                         query={{ entries, ...queryFilters }}
                     />
                     <Button
                         type="submit"
-                        form="search-users"
+                        form="search-residents"
                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                     >
                         Cari
                     </Button>
                 </div>
 
-                {/* Toolbar utama: filter/sort di kiri, entries dan tombol tambah di kanan. */}
+                {/* Toolbar */}
                 <div className="grid items-center justify-between gap-2 md:grid-cols-2">
                     <div className="flex flex-wrap items-center gap-2">
                         <Select
@@ -217,7 +183,6 @@ export default function UsersIndex({
                                 <Filter className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                 <SelectValue placeholder="Filter" />
                             </SelectTrigger>
-                            {/* Opsi filter memakai prefix value agar handler tahu tipe filter yang dipilih. */}
                             <SelectContent className="t-size3 border-(--primary)/60 bg-yellow-100">
                                 <SelectGroup>
                                     <SelectLabel>Urutan</SelectLabel>
@@ -227,47 +192,37 @@ export default function UsersIndex({
                                     <SelectItem value="sort:created_asc">
                                         Waktu Terlama
                                     </SelectItem>
-                                    <SelectItem value="sort:updated_desc">
-                                        Terakhir Diubah
-                                    </SelectItem>
-                                    <SelectItem value="sort:updated_asc">
-                                        Paling Lama Diubah
-                                    </SelectItem>
                                     <SelectItem value="sort:name_asc">
                                         Nama A-Z
                                     </SelectItem>
                                     <SelectItem value="sort:name_desc">
                                         Nama Z-A
                                     </SelectItem>
+                                    <SelectItem value="sort:nik_asc">
+                                        NIK Terkecil
+                                    </SelectItem>
+                                    <SelectItem value="sort:nik_desc">
+                                        NIK Terbesar
+                                    </SelectItem>
                                 </SelectGroup>
-                                {/* <SelectSeparator />
-                                <SelectGroup>
-                                    <SelectLabel>Peran</SelectLabel>
-                                    {roles.map((roleOption) => (
-                                        <SelectItem
-                                            key={roleOption.id}
-                                            value={`role:${roleOption.id}`}
-                                        >
-                                            {roleOption.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup> */}
                                 <SelectSeparator className="bg-(--primary)/60" />
                                 <SelectGroup>
                                     <SelectLabel>Status</SelectLabel>
-                                    <SelectItem value="verified:verified">
-                                        Terverifikasi
+                                    <SelectItem value="status:all">
+                                        Semua Status
                                     </SelectItem>
-                                    <SelectItem value="verified:unverified">
-                                        Belum Terverifikasi
+                                    <SelectItem value="status:active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="status:inactive">
+                                        Nonaktif
                                     </SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                        {selected.length > 0 && can.includes('d-users') && (
-                            /* Bulk delete hanya muncul saat ada minimal satu user dipilih. */
+                        {selected.length > 0 && can.includes('d-residents') && (
                             <BulkDeleteDialog
-                                title="Pengguna"
+                                title="Data Penduduk"
                                 selectedCount={selected.length}
                                 onConfirm={() => {
                                     router.post(
@@ -282,17 +237,18 @@ export default function UsersIndex({
                             />
                         )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 justify-self-end">
+
+                    <div className="flex items-center gap-2 justify-self-end">
                         <Entries
-                            route={route('users.index')}
+                            route={route('residents.index')}
                             search={search}
                             entries={entries}
                             query={queryFilters}
                         />
-                        {can.includes('c-users') && (
+                        {can.includes('c-residents') && (
                             <Link
-                                href={route('users.create')}
                                 className="t-size3 flex items-center gap-1.5 rounded-md bg-(--primary) px-2.5 py-1.5 font-medium whitespace-nowrap text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary) hover:text-(--primary) hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:bg-(--secondary) active:text-(--primary) active:shadow-none bp360:px-3 bp360:py-2"
+                                href={route('residents.create')}
                             >
                                 <PlusCircle className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                 Tambah Baru
@@ -301,14 +257,14 @@ export default function UsersIndex({
                     </div>
                 </div>
 
-                {/* Tabel menampilkan data dari paginator Inertia; filter/search selalu dilakukan di server. */}
+                {/* Table */}
                 <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-green-50 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
-                    {users.data.length > 0 ? (
+                    {residents.data.length > 0 ? (
                         <div className="bg-white">
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
                                     <tr className="t-size3 text-(--primary)">
-                                        {can.includes('d-users') && (
+                                        {can.includes('d-residents') && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
@@ -320,113 +276,142 @@ export default function UsersIndex({
                                                     }
                                                     checked={
                                                         selected.length ===
-                                                            users.data.length &&
-                                                        users.data.length > 0
+                                                            residents.data
+                                                                .length &&
+                                                        residents.data.length >
+                                                            0
                                                     }
                                                 />
                                             </th>
                                         )}
                                         <th
                                             scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
+                                            className="w-14 px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>NO</span>
+                                            NO
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Nama</span>
+                                            NIK & No. KK
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Email</span>
+                                            Nama
                                         </th>
                                         <th
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            <span>Peran</span>
+                                            Gender
                                         </th>
-                                        {(can.includes('u-users') ||
-                                            can.includes('d-users')) && (
+                                        <th
+                                            scope="col"
+                                            className="px-4 py-3 text-center font-semibold"
+                                        >
+                                            Pekerjaan
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-4 py-3 text-center font-semibold"
+                                        >
+                                            Alamat
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-4 py-3 text-center font-semibold"
+                                        >
+                                            Status
+                                        </th>
+                                        {(can.includes('u-residents') ||
+                                            can.includes('d-residents')) && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
                                             >
-                                                <span>Aksi</span>
+                                                Aksi
                                             </th>
                                         )}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.data.map((user, index) => (
+                                    {residents.data.map((resident, idx) => (
                                         <tr
-                                            key={user.id}
+                                            key={resident.id}
                                             className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                         >
-                                            {can.includes('d-users') && (
+                                            {can.includes('d-residents') && (
                                                 <td className="px-4 py-2 text-center">
                                                     <Checkbox
                                                         className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
                                                         onCheckedChange={() =>
                                                             toggleSelection(
-                                                                user.id.toString(),
+                                                                resident.id.toString(),
                                                             )
                                                         }
                                                         checked={selected.includes(
-                                                            user.id.toString(),
+                                                            resident.id.toString(),
                                                         )}
                                                     />
                                                 </td>
                                             )}
-                                            <td
-                                                scope="row"
-                                                className="px-4 py-2 text-center font-medium"
-                                            >
-                                                {users.from + index}
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                {residents.from + idx}
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
-                                                {user.name}
-                                            </td>
-                                            <td className="px-4 py-2 text-center font-medium">
-                                                {user.email}
-                                            </td>
-                                            <td className="px-4 py-2 text-center font-medium">
-                                                <div className="inline-flex flex-wrap gap-1">
-                                                    {user.roles.length > 0 ? (
-                                                        user.roles.map(
-                                                            (role) => (
-                                                                <span
-                                                                    key={
-                                                                        role.id
-                                                                    }
-                                                                    className="rounded-full bg-(--primary)/10 px-2.5 py-1.5 whitespace-nowrap text-(--primary)"
-                                                                >
-                                                                    {role.name}
-                                                                </span>
-                                                            ),
-                                                        )
-                                                    ) : (
-                                                        <span className="rounded-full bg-(--primary)/10 px-2.5 py-1.5 whitespace-nowrap text-(--primary)">
-                                                            Tidak Ada
-                                                        </span>
-                                                    )}
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold">
+                                                        {resident.nik}
+                                                    </span>
+                                                    <span className="t-size1 text-stone-500">
+                                                        KK: {resident.no_kk}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            {(can.includes('u-users') ||
-                                                can.includes('d-users')) && (
+                                            <td className="px-4 py-2 text-center font-semibold">
+                                                {resident.name}
+                                            </td>
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                {resident.gender}
+                                            </td>
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                {resident.occupation}
+                                            </td>
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                {resident.address}
+                                            </td>
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                <span
+                                                    className={`rounded-full bg-${resident.is_active ? '(--primary)/10' : 'red-100'} px-2.5 py-1.5 whitespace-nowrap text-${
+                                                        resident.is_active
+                                                            ? '(--primary)'
+                                                            : 'red-600'
+                                                    }`}
+                                                >
+                                                    {resident.is_active
+                                                        ? 'Aktif'
+                                                        : 'Nonaktif'}
+                                                </span>
+                                            </td>
+                                            {(can.includes('u-residents') ||
+                                                can.includes(
+                                                    'd-residents',
+                                                )) && (
                                                 <td className="px-4 py-2 text-center">
                                                     <div className="flex items-center justify-center space-x-2">
                                                         {can.includes(
-                                                            'u-users',
+                                                            'u-residents',
                                                         ) && (
                                                             <Link
                                                                 href={route(
-                                                                    'users.edit',
-                                                                    user.id,
+                                                                    'residents.edit',
+                                                                    {
+                                                                        resident:
+                                                                            resident.id,
+                                                                    },
                                                                 )}
                                                                 className="inline-flex items-center gap-1 rounded-md border-[1.7px] border-(--secondary)/50 bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-(--secondary)/70 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:border-(--secondary)/70 active:bg-(--secondary)/50 active:shadow-none bp360:px-3 bp360:py-2"
                                                             >
@@ -434,21 +419,20 @@ export default function UsersIndex({
                                                                 Ubah
                                                             </Link>
                                                         )}
-                                                        {/* Untuk single delete */}
                                                         {can.includes(
-                                                            'd-users',
+                                                            'd-residents',
                                                         ) && (
                                                             <SingleDeleteDialog
-                                                                title="Pengguna"
+                                                                title="Data Penduduk"
                                                                 itemName={
-                                                                    user.name
+                                                                    resident.name
                                                                 }
                                                                 label="Hapus"
                                                                 onConfirm={() =>
                                                                     router.delete(
                                                                         destroy(
-                                                                            userRouteArg(
-                                                                                user.id,
+                                                                            residentRouteArg(
+                                                                                resident.id,
                                                                             ),
                                                                         ).url,
                                                                         {
@@ -465,7 +449,6 @@ export default function UsersIndex({
                                     ))}
                                 </tbody>
                             </table>
-                            {/* Pagination memakai link dari Laravel paginator yang sudah membawa query aktif. */}
                             <div
                                 className={`t-size3 bg-green-50 ${
                                     shouldShowPagination
@@ -473,26 +456,24 @@ export default function UsersIndex({
                                         : 'mb-7'
                                 }`}
                             >
-                                <InertiaPagination pagination={users} />
+                                <InertiaPagination pagination={residents} />
                             </div>
                         </div>
                     ) : (
                         <div className="t-size3 mb-3 bg-(--secondary)/15 p-3 text-center font-semibold text-(--primary)">
-                            Data Tidak Ditemukan
+                            Data Tidak ditemukan
                         </div>
                     )}
                 </div>
-
-                {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
             </div>
         </>
     );
 }
 
-UsersIndex.layout = {
+ResidentsIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Kelola Pengguna',
+            title: 'Data Penduduk',
             href: index(),
         },
     ],
