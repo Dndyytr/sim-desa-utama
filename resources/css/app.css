@@ -258,6 +258,11 @@
     /* body {
         @apply bg-background;
     } */
+
+    html,
+    body {
+        overflow-x: hidden;
+    }
 }
 
 @layer components {
@@ -308,6 +313,28 @@
     /* hamburger button */
     .hamburger {
         @apply h-0.75 w-5.5 rounded-2xl bg-primary transition-all duration-300 ease-in-out group-hover:bg-(--fourth) bp360:h-0.75 bp360:w-5.75 bp400:h-[3.5px] bp400:w-6 sm:w-6.25 md:h-[3.75px] md:w-7.25 lg:h-1 lg:w-7.75 xl:h-1 xl:w-8 2xl:h-[4.75px] 2xl:w-9.5;
+    }
+
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* scrollbar */

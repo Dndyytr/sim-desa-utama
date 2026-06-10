@@ -74,6 +74,28 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id',
         ],
+        [
+            'id' => 7,
+            'parent_id' => null,
+            'title' => 'Kelola Data Penduduk',
+            'url' => 'residents.index',
+            'tag' => 'residents',
+            'icon' => 'UserRound',
+            'permission' => 'resident',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
+        [
+            'id' => 8,
+            'parent_id' => null,
+            'title' => 'Kelola Data Keluarga',
+            'url' => 'familys.index',
+            'tag' => 'familys',
+            'icon' => 'Users',
+            'permission' => 'family',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
         // Tambahkan menu lainnya sesuai kebutuhan
     ];
 

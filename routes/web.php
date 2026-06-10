@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Sekdes\FamilyController;
 use App\Http\Controllers\Sekdes\ResidentController;
 use App\Http\Controllers\Sekdes\TypeServiceController;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('type-services', TypeServiceController::class);
         Route::post('residents/bulk-delete', [ResidentController::class, 'bulkDelete'])->name('residents.bulk-delete');
         Route::resource('residents', ResidentController::class);
+        Route::post('familys/bulk-delete', [FamilyController::class, 'bulkDelete'])->name('familys.bulk-delete');
+        Route::resource('familys', FamilyController::class);
     });
 });
 

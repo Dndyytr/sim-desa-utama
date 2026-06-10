@@ -20,35 +20,37 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { SingleDeleteDialog } from '@/components/ui/single-delete';
-import { bulkDelete, destroy, index } from '@/routes/residents';
+import { bulkDelete, destroy, index } from '@/routes/familys';
 
-interface Resident {
+interface Family {
     id: number;
-    nik: string;
     no_kk: string;
-    name: string;
-    birth_place: string;
-    birth_date: string;
-    gender: 'Laki-laki' | 'Perempuan';
-    religion: string;
-    marital_status: string;
-    occupation: string;
+    head_resident_id: number;
     address: string;
-    is_active: boolean;
+    rt?: string;
+    rw?: string;
+    hamlet?: string;
+    status: boolean;
     created_at: string;
     updated_at: string;
+    head_resident?: {
+        id: number;
+        nik: string;
+        name: string;
+    };
+    members_count?: number;
 }
 
-export default function ResidentsIndex({
-    residents,
+export default function FamilysIndex({
+    familys,
     entries,
     search,
     sort,
     status,
     hasFilter,
 }: {
-    residents: {
-        data: Resident[];
+    familys: {
+        data: Family[];
         from: number;
         to: number;
         total: number;
@@ -72,9 +74,7 @@ export default function ResidentsIndex({
 
     const toggleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelected(
-                residents.data.map((resident) => resident.id.toString()),
-            );
+            setSelected(familys.data.map((family) => family.id.toString()));
         } else {
             setSelected([]);
         }
@@ -143,29 +143,29 @@ export default function ResidentsIndex({
         }
     };
 
-    const shouldShowPagination = residents.last_page > 1;
+    const shouldShowPagination = familys.last_page > 1;
 
-    type DestroyResidentArg = Parameters<typeof destroy>[0];
+    type DestroyFamilyArg = Parameters<typeof destroy>[0];
 
-    const residentRouteArg = (id: Resident['id']) =>
-        ({ resident: String(id) }) as unknown as DestroyResidentArg;
+    const familyRouteArg = (id: Family['id']) =>
+        ({ family: String(id) }) as unknown as DestroyFamilyArg;
 
     return (
         <>
-            <Head title="Kelola Data Penduduk" />
+            <Head title="Kelola Data Keluarga" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
                 {/* Search Bar */}
                 <div className="flex w-full max-w-full items-center gap-2 md:max-w-[70%] lg:max-w-1/2">
                     <SearchBar
-                        route={route('residents.index')}
+                        route={route('familys.index')}
                         search={search}
-                        formId="search-residents"
+                        formId="search-familys"
                         query={{ entries, ...queryFilters }}
                     />
                     <Button
                         type="submit"
-                        form="search-residents"
+                        form="search-familys"
                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                     >
                         Cari
@@ -192,17 +192,11 @@ export default function ResidentsIndex({
                                     <SelectItem value="sort:created_asc">
                                         Waktu Terlama
                                     </SelectItem>
-                                    <SelectItem value="sort:name_asc">
-                                        Nama A-Z
+                                    <SelectItem value="sort:no_kk_asc">
+                                        No. KK A-Z
                                     </SelectItem>
-                                    <SelectItem value="sort:name_desc">
-                                        Nama Z-A
-                                    </SelectItem>
-                                    <SelectItem value="sort:nik_asc">
-                                        NIK Terkecil
-                                    </SelectItem>
-                                    <SelectItem value="sort:nik_desc">
-                                        NIK Terbesar
+                                    <SelectItem value="sort:no_kk_desc">
+                                        No. KK Z-A
                                     </SelectItem>
                                 </SelectGroup>
                                 <SelectSeparator className="bg-(--primary)/60" />
@@ -220,9 +214,9 @@ export default function ResidentsIndex({
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                        {selected.length > 0 && can.includes('d-residents') && (
+                        {selected.length > 0 && can.includes('d-familys') && (
                             <BulkDeleteDialog
-                                title="Data Penduduk"
+                                title="Data Keluarga"
                                 selectedCount={selected.length}
                                 onConfirm={() => {
                                     router.post(
@@ -240,15 +234,15 @@ export default function ResidentsIndex({
 
                     <div className="flex items-center gap-2 justify-self-end">
                         <Entries
-                            route={route('residents.index')}
+                            route={route('familys.index')}
                             search={search}
                             entries={entries}
                             query={queryFilters}
                         />
-                        {can.includes('c-residents') && (
+                        {can.includes('c-familys') && (
                             <Link
                                 className="t-size3 flex items-center gap-1.5 rounded-md bg-(--primary) px-2.5 py-1.5 font-medium whitespace-nowrap text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-(--secondary) hover:text-(--primary) hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:bg-(--secondary) active:text-(--primary) active:shadow-none bp360:px-3 bp360:py-2"
-                                href={route('residents.create')}
+                                href={route('familys.create')}
                             >
                                 <PlusCircle className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                                 Tambah Baru
@@ -259,12 +253,12 @@ export default function ResidentsIndex({
 
                 {/* Table */}
                 <div className="sb-primary relative mt-1 overflow-x-auto rounded-lg bg-green-50 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] md:rounded-xl">
-                    {residents.data.length > 0 ? (
+                    {familys.data.length > 0 ? (
                         <div className="bg-white">
                             <table className="w-full">
                                 <thead className="bg-(--secondary)/15">
                                     <tr className="t-size3 text-(--primary)">
-                                        {can.includes('d-residents') && (
+                                        {can.includes('d-familys') && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
@@ -276,10 +270,9 @@ export default function ResidentsIndex({
                                                     }
                                                     checked={
                                                         selected.length ===
-                                                            residents.data
+                                                            familys.data
                                                                 .length &&
-                                                        residents.data.length >
-                                                            0
+                                                        familys.data.length > 0
                                                     }
                                                 />
                                             </th>
@@ -294,25 +287,7 @@ export default function ResidentsIndex({
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
-                                            NIK & No. KK
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            Nama
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            Gender
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-4 py-3 text-center font-semibold"
-                                        >
-                                            Pekerjaan
+                                            No. KK & Kepala Keluarga
                                         </th>
                                         <th
                                             scope="col"
@@ -324,10 +299,16 @@ export default function ResidentsIndex({
                                             scope="col"
                                             className="px-4 py-3 text-center font-semibold"
                                         >
+                                            Jumlah Anggota
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-4 py-3 text-center font-semibold"
+                                        >
                                             Status
                                         </th>
-                                        {(can.includes('u-residents') ||
-                                            can.includes('d-residents')) && (
+                                        {(can.includes('u-familys') ||
+                                            can.includes('d-familys')) && (
                                             <th
                                                 scope="col"
                                                 className="px-4 py-3 text-center font-semibold"
@@ -338,79 +319,100 @@ export default function ResidentsIndex({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {residents.data.map((resident, idx) => (
+                                    {familys.data.map((family, idx) => (
                                         <tr
-                                            key={resident.id}
+                                            key={family.id}
                                             className="t-size2 border-b-[1.5px] border-(--primary)/10 text-(--font-color) last:border-b-0 even:bg-(--primary)/3"
                                         >
-                                            {can.includes('d-residents') && (
+                                            {can.includes('d-familys') && (
                                                 <td className="px-4 py-2 text-center">
                                                     <Checkbox
                                                         className="size-4.5 rounded-sm border-(--font-color)/70 bp360:size-4.75 bp400:size-5 md:size-5.25 lg:size-5.5 xl:size-5.75 2xl:size-6 [&>span>svg]:size-4 bp360:[&>span>svg]:size-4.25 bp400:[&>span>svg]:size-4.5 md:[&>span>svg]:size-4.75 lg:[&>span>svg]:size-5 xl:[&>span>svg]:size-5.25 2xl:[&>span>svg]:size-5.5"
                                                         onCheckedChange={() =>
                                                             toggleSelection(
-                                                                resident.id.toString(),
+                                                                family.id.toString(),
                                                             )
                                                         }
                                                         checked={selected.includes(
-                                                            resident.id.toString(),
+                                                            family.id.toString(),
                                                         )}
                                                     />
                                                 </td>
                                             )}
                                             <td className="px-4 py-2 text-center font-medium">
-                                                {residents.from + idx}
+                                                {familys.from + idx}
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
                                                 <div className="flex flex-col">
                                                     <span className="font-bold">
-                                                        {resident.nik}
+                                                        {family.no_kk}
                                                     </span>
-                                                    <span className="t-size1 text-stone-500">
-                                                        KK: {resident.no_kk}
+                                                    <span className="t-size1 font-semibold text-stone-500">
+                                                        Kepala:{' '}
+                                                        {family.head_resident
+                                                            ?.name ||
+                                                            'Belum Ditentukan'}
                                                     </span>
+                                                    {family.head_resident && (
+                                                        <span className="t-size1 text-stone-400">
+                                                            NIK:{' '}
+                                                            {
+                                                                family
+                                                                    .head_resident
+                                                                    .nik
+                                                            }
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2 text-center font-semibold">
-                                                {resident.name}
+                                            <td className="px-4 py-2 text-center font-medium">
+                                                <div className="flex flex-col">
+                                                    <span>
+                                                        {family.address || '-'}
+                                                    </span>
+                                                    {(family.rt ||
+                                                        family.rw ||
+                                                        family.hamlet) && (
+                                                        <span className="t-size1 font-semibold text-stone-500">
+                                                            RT/RW:{' '}
+                                                            {family.rt || '-'}/
+                                                            {family.rw || '-'} |
+                                                            Dusun:{' '}
+                                                            {family.hamlet ||
+                                                                '-'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
-                                                {resident.gender}
-                                            </td>
-                                            <td className="px-4 py-2 text-center font-medium">
-                                                {resident.occupation}
-                                            </td>
-                                            <td className="px-4 py-2 text-center font-medium">
-                                                {resident.address}
+                                                {family.members_count || 0}{' '}
+                                                Orang
                                             </td>
                                             <td className="px-4 py-2 text-center font-medium">
                                                 <span
-                                                    className={`rounded-full bg-${resident.is_active ? '(--primary)/10' : 'red-100'} px-2.5 py-1.5 whitespace-nowrap text-${
-                                                        resident.is_active
+                                                    className={`rounded-full bg-${family.status ? '(--primary)/10' : 'red-100'} px-2.5 py-1.5 whitespace-nowrap text-${
+                                                        family.status
                                                             ? '(--primary)'
                                                             : 'red-600'
                                                     }`}
                                                 >
-                                                    {resident.is_active
+                                                    {family.status
                                                         ? 'Aktif'
                                                         : 'Nonaktif'}
                                                 </span>
                                             </td>
-                                            {(can.includes('u-residents') ||
-                                                can.includes(
-                                                    'd-residents',
-                                                )) && (
+                                            {(can.includes('u-familys') ||
+                                                can.includes('d-familys')) && (
                                                 <td className="px-4 py-2 text-center">
                                                     <div className="flex items-center justify-center space-x-2">
                                                         {can.includes(
-                                                            'u-residents',
+                                                            'u-familys',
                                                         ) && (
                                                             <Link
                                                                 href={route(
-                                                                    'residents.edit',
+                                                                    'familys.edit',
                                                                     {
-                                                                        resident:
-                                                                            resident.id,
+                                                                        family: family.id,
                                                                     },
                                                                 )}
                                                                 className="inline-flex items-center gap-1 rounded-md border-[1.7px] border-(--secondary)/50 bg-(--secondary)/10 px-2.5 py-1.5 font-medium text-yellow-500 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-(--secondary)/70 hover:bg-(--secondary)/50 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:border-(--secondary)/70 active:bg-(--secondary)/50 active:shadow-none bp360:px-3 bp360:py-2"
@@ -420,19 +422,17 @@ export default function ResidentsIndex({
                                                             </Link>
                                                         )}
                                                         {can.includes(
-                                                            'd-residents',
+                                                            'd-familys',
                                                         ) && (
                                                             <SingleDeleteDialog
-                                                                title="Data Penduduk"
-                                                                itemName={
-                                                                    resident.name
-                                                                }
+                                                                title="Data Keluarga"
+                                                                itemName={`KK ${family.no_kk}`}
                                                                 label="Hapus"
                                                                 onConfirm={() =>
                                                                     router.delete(
                                                                         destroy(
-                                                                            residentRouteArg(
-                                                                                resident.id,
+                                                                            familyRouteArg(
+                                                                                family.id,
                                                                             ),
                                                                         ).url,
                                                                         {
@@ -456,7 +456,7 @@ export default function ResidentsIndex({
                                         : 'mb-7'
                                 }`}
                             >
-                                <InertiaPagination pagination={residents} />
+                                <InertiaPagination pagination={familys} />
                             </div>
                         </div>
                     ) : (
@@ -470,10 +470,10 @@ export default function ResidentsIndex({
     );
 }
 
-ResidentsIndex.layout = {
+FamilysIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Data Penduduk',
+            title: 'Data Keluarga',
             href: index(),
         },
     ],

@@ -8,6 +8,7 @@ import {
 import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
+import { useInView } from 'framer-motion';
 import {
     Activity,
     AlertTriangle,
@@ -27,8 +28,13 @@ import {
     UserX,
     Wrench,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+    AnimatedCounter,
+    EntranceContainer,
+    EntranceItem,
+} from '@/components/animations';
 import { index } from '@/routes/dashboards';
 
 echarts.use([
@@ -359,42 +365,98 @@ const SUMMARY_CARDS = [
 const sumRoleCount = (data: RoleCount[]) =>
     data.reduce((a, r) => a + r.count, 0);
 
+function useViewportOnce<T extends Element>() {
+    const ref = useRef<T>(null);
+
+    return [
+        ref,
+        useInView(ref, { once: true, margin: '0px', amount: 0.35 }),
+    ] as const;
+}
+
 // ─── COMPONENTS ───────────────────────────────
 
-function Sparkline({ data, color }: { data: number[]; color: string }) {
+function Sparkline({
+    data,
+    color,
+    label,
+}: {
+    data: number[];
+    color: string;
+    label: string;
+}) {
+    const [ref, hasEntered] = useViewportOnce<HTMLDivElement>();
+    const points = useMemo(() => data.map((_, i) => `${i + 1}`), [data]);
+
     const option = useMemo(
         (): echarts.EChartsCoreOption => ({
+            tooltip: {
+                trigger: 'axis',
+                confine: true,
+                backgroundColor: '#1e1e1e',
+                borderColor: '#1e1e1e',
+                borderWidth: 0,
+                padding: [5, 7],
+                textStyle: { color: '#ffffff', fontSize: 10 },
+                formatter: (params: any[]) => {
+                    const point = params[0];
+
+                    return `${label}<br/>${point.value}`;
+                },
+                axisPointer: {
+                    type: 'line',
+                    lineStyle: { color: `${color}80`, width: 1 },
+                },
+            },
             grid: { left: 0, right: 0, top: 1, bottom: 0 },
-            xAxis: { show: false, type: 'category', data },
+            xAxis: {
+                show: false,
+                type: 'category',
+                data: points,
+                boundaryGap: false,
+            },
             yAxis: { show: false, min: 'dataMin', max: 'dataMax' },
             series: [
                 {
                     type: 'line',
                     data,
                     smooth: true,
-                    showSymbol: false,
+                    showSymbol: true,
+                    symbol: 'circle',
+                    symbolSize: 3,
                     lineStyle: { width: 1.5, color },
+                    itemStyle: { color },
+                    emphasis: {
+                        scale: true,
+                        lineStyle: { width: 2, color },
+                    },
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                             { offset: 0, color: `${color}44` },
                             { offset: 1, color: `${color}00` },
                         ]),
                     },
-                    animation: false,
+                    animation: hasEntered,
+                    animationDuration: 800,
+                    animationEasing: 'cubicOut',
                 },
             ],
         }),
-        [data, color],
+        [color, data, hasEntered, label, points],
     );
 
     return (
-        <ECharts
-            echarts={echarts}
-            option={option}
-            style={{ width: 56, height: 22 }}
-            notMerge
-            lazyUpdate
-        />
+        <div ref={ref} style={{ width: 56, height: 22 }}>
+            {hasEntered && (
+                <ECharts
+                    echarts={echarts}
+                    option={option}
+                    style={{ width: '100%', height: '100%' }}
+                    notMerge
+                    lazyUpdate
+                />
+            )}
+        </div>
     );
 }
 
@@ -473,9 +535,10 @@ function StatCard({
                         {label}
                     </p>
                     <div className="mt-0.5 flex items-baseline gap-1">
-                        <span className="text-xl font-bold text-[#062f1d]">
-                            {value}
-                        </span>
+                        <AnimatedCounter
+                            to={Number(value)}
+                            className="text-xl font-bold text-[#062f1d]"
+                        />
                         <span className="text-[11px] text-gray-400">
                             {unit}
                         </span>
@@ -505,15 +568,15 @@ function QuickAction({
     return (
         <Link
             href={href}
-            className="group flex flex-col items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-gray-50/60 p-3 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            className="flex flex-col items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-gray-50/60 p-3"
         >
             <div
-                className="flex size-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110"
+                className="flex size-9 items-center justify-center rounded-lg"
                 style={{ backgroundColor: `${color}15`, color }}
             >
                 <Icon className="size-4.5" />
             </div>
-            <span className="text-[10px] leading-tight font-medium text-gray-600 group-hover:text-[#0a8f3f]">
+            <span className="text-[10px] leading-tight font-medium text-gray-600">
                 {label}
             </span>
         </Link>
@@ -574,6 +637,10 @@ export default function AdminDashboard({
 }: DashboardProps) {
     const { auth } = usePage<{ auth: { user: { name: string } } }>().props;
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [donutChartRef, donutChartEntered] =
+        useViewportOnce<HTMLDivElement>();
+    const [barChartRef, barChartEntered] = useViewportOnce<HTMLDivElement>();
+    const [lineChartRef, lineChartEntered] = useViewportOnce<HTMLDivElement>();
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60_000);
@@ -634,6 +701,20 @@ export default function AdminDashboard({
 
     const pieOption: echarts.EChartsCoreOption = useMemo(
         () => ({
+            stateAnimation: {
+                duration: 300,
+                easing: 'cubicOut',
+            },
+            animation: 'auto' as any,
+            animationDuration: 1000,
+            animationDurationUpdate: 500,
+            animationEasing: 'cubicInOut',
+            animationEasingUpdate: 'cubicInOut',
+            animationThreshold: 2000,
+            progressiveThreshold: 3000,
+            progressive: 400,
+            hoverLayerThreshold: 3000,
+            useUTC: false,
             tooltip: {
                 trigger: 'item',
                 backgroundColor: '#1e1e1e',
@@ -668,6 +749,8 @@ export default function AdminDashboard({
                     type: 'pie',
                     radius: ['42%', '68%'],
                     center: ['32%', '50%'],
+                    startAngle: 90,
+                    clockwise: true,
                     avoidLabelOverlap: false,
                     itemStyle: {
                         borderRadius: 4,
@@ -675,22 +758,7 @@ export default function AdminDashboard({
                         borderWidth: 2,
                     },
                     label: {
-                        show: true,
-                        position: 'center',
-                        formatter: `{total|${totalRoleCount}}\n{label|Pengguna}`,
-                        rich: {
-                            total: {
-                                fontSize: 24,
-                                fontWeight: 'bold' as const,
-                                color: '#062f1d',
-                                lineHeight: 32,
-                            },
-                            label: {
-                                fontSize: 11,
-                                color: '#9ca3af',
-                                lineHeight: 18,
-                            },
-                        },
+                        show: false,
                     },
                     emphasis: {
                         label: { show: true },
@@ -704,9 +772,6 @@ export default function AdminDashboard({
                             color: ROLE_COLORS[i % ROLE_COLORS.length],
                         },
                     })),
-                    animationType: 'scale',
-                    animationDuration: 1200,
-                    animationEasing: 'cubicOut',
                 },
             ],
         }),
@@ -793,6 +858,7 @@ export default function AdminDashboard({
                         },
                     })),
                     barMaxWidth: 36,
+                    animation: barChartEntered,
                     label: {
                         show: true,
                         position: 'top',
@@ -805,7 +871,7 @@ export default function AdminDashboard({
                 },
             ],
         }),
-        [modActs],
+        [barChartEntered, modActs],
     );
 
     // ── ECharts option: Line (Row 4 left) ──
@@ -875,6 +941,9 @@ export default function AdminDashboard({
                         fontSize: 9,
                         fontWeight: 'bold' as const,
                     },
+                    animation: lineChartEntered,
+                    animationDuration: 1000,
+                    animationEasing: 'cubicOut',
                 },
                 {
                     name: 'Login Gagal',
@@ -892,10 +961,13 @@ export default function AdminDashboard({
                         fontSize: 9,
                         fontWeight: 'bold' as const,
                     },
+                    animation: lineChartEntered,
+                    animationDuration: 1000,
+                    animationEasing: 'cubicOut',
                 },
             ],
         }),
-        [],
+        [lineChartEntered],
     );
 
     return (
@@ -932,7 +1004,7 @@ export default function AdminDashboard({
                             <div className="mt-1 flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5">
                                     <span className="relative flex size-2">
-                                        <span className="absolute size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                        <span className="absolute size-full rounded-full bg-emerald-400 opacity-25" />
                                         <span className="relative size-2 rounded-full bg-emerald-500" />
                                     </span>
                                     <span className="text-[10px] font-medium text-emerald-700">
@@ -967,12 +1039,14 @@ export default function AdminDashboard({
                                         {m.label}
                                     </p>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#062f1d]">
-                                            {m.value}
-                                        </span>
+                                        <AnimatedCounter
+                                            to={m.value}
+                                            className="text-lg font-bold text-[#062f1d]"
+                                        />
                                         <Sparkline
                                             data={m.sparkData}
                                             color={m.deltaColor}
+                                            label={m.label}
                                         />
                                     </div>
                                     {m.delta && (
@@ -998,7 +1072,7 @@ export default function AdminDashboard({
                         <div className="flex w-43.75 shrink-0 items-center px-4">
                             <Link
                                 href={route('users.index')}
-                                className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#0a8f3f] px-3 py-2.5 text-[12px] font-semibold text-white transition-all hover:bg-[#0a8f3f]/90 hover:shadow-lg"
+                                className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#0a8f3f] px-3 py-2.5 text-[12px] font-semibold text-white"
                             >
                                 Lihat Aktivitas Sistem
                                 <ArrowRight className="size-3.5" />
@@ -1024,7 +1098,7 @@ export default function AdminDashboard({
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5">
                                     <span className="relative flex size-2">
-                                        <span className="absolute size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                        <span className="absolute size-full rounded-full bg-emerald-400 opacity-25" />
                                         <span className="relative size-2 rounded-full bg-emerald-500" />
                                     </span>
                                     <span className="text-[10px] font-medium text-emerald-700">
@@ -1050,9 +1124,17 @@ export default function AdminDashboard({
                                     <p className="text-[10px] text-gray-500">
                                         {m.label}
                                     </p>
-                                    <span className="text-base font-bold text-[#062f1d]">
-                                        {m.value}
-                                    </span>
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <AnimatedCounter
+                                            to={m.value}
+                                            className="text-base font-bold text-[#062f1d]"
+                                        />
+                                        <Sparkline
+                                            data={m.sparkData}
+                                            color={m.deltaColor}
+                                            label={m.label}
+                                        />
+                                    </div>
                                     {m.delta && (
                                         <span
                                             className="ml-1 text-[10px] font-medium"
@@ -1066,257 +1148,330 @@ export default function AdminDashboard({
                         ))}
                     </div>
                 </div>
-
                 {/* ── ROW 2: SIX SUMMARY CARDS ── */}
-                <div className="grid grid-cols-2 gap-3 bp400:gap-3.5 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+                <EntranceContainer
+                    stagger={0.04}
+                    className="grid grid-cols-2 gap-3 bp400:gap-3.5 md:grid-cols-3 lg:grid-cols-6 lg:gap-4"
+                >
                     {SUMMARY_CARDS.map((card) => (
-                        <StatCard
-                            key={card.label}
-                            icon={card.icon}
-                            label={card.label}
-                            value={
-                                'value' in card ? card.value : stats[card.key]
-                            }
-                            unit={card.unit}
-                            iconBg={card.iconBg}
-                            iconColor={card.iconColor}
-                            deltaText={card.deltaText}
-                            deltaTone={card.deltaTone}
-                        />
+                        <EntranceItem key={card.label}>
+                            <StatCard
+                                icon={card.icon}
+                                label={card.label}
+                                value={
+                                    'value' in card
+                                        ? card.value
+                                        : stats[card.key]
+                                }
+                                unit={card.unit}
+                                iconBg={card.iconBg}
+                                iconColor={card.iconColor}
+                                deltaText={card.deltaText}
+                                deltaTone={card.deltaTone}
+                            />
+                        </EntranceItem>
                     ))}
-                </div>
-
+                </EntranceContainer>
                 {/* ── ROW 3: CHARTS ── */}
-                <div className="grid gap-4 lg:grid-cols-5 lg:gap-5">
+                <EntranceContainer
+                    stagger={0.1}
+                    className="grid gap-4 lg:grid-cols-5 lg:gap-5"
+                >
                     {/* Donut — 43% */}
-                    <Card className="lg:col-span-2">
-                        <SectionHeader
-                            title="Distribusi Role Pengguna"
-                            showInfo
-                        />
-                        <div className="p-2 md:p-3">
-                            {roleDist.length > 0 ? (
-                                <ECharts
-                                    echarts={echarts}
-                                    option={pieOption}
-                                    style={{ height: 260 }}
-                                    notMerge
-                                    lazyUpdate
-                                />
-                            ) : (
-                                <div className="flex h-65 items-center justify-center text-xs text-gray-400">
-                                    Belum ada data distribusi
-                                </div>
-                            )}
-                        </div>
-                    </Card>
+                    <EntranceItem className="lg:col-span-2">
+                        <Card>
+                            <SectionHeader
+                                title="Distribusi Role Pengguna"
+                                showInfo
+                            />
+                            <div className="p-2 md:p-3">
+                                {roleDist.length > 0 ? (
+                                    <div
+                                        ref={donutChartRef}
+                                        className="relative"
+                                        style={{ height: 260 }}
+                                    >
+                                        {donutChartEntered && (
+                                            <>
+                                                <ECharts
+                                                    echarts={echarts}
+                                                    option={pieOption}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: 260,
+                                                    }}
+                                                    notMerge
+                                                    lazyUpdate
+                                                />
+                                                <div className="pointer-events-none absolute top-1/2 left-[32%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center">
+                                                    <span className="text-[10px] leading-tight text-gray-500">
+                                                        Total
+                                                    </span>
+                                                    <AnimatedCounter
+                                                        to={totalRoleCount}
+                                                        className="text-2xl leading-7 font-bold text-[#062f1d]"
+                                                    />
+                                                    <span className="text-[11px] leading-tight text-gray-400">
+                                                        Pengguna
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex h-65 items-center justify-center text-xs text-gray-400">
+                                        Belum ada data distribusi
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </EntranceItem>
 
                     {/* Bar — 57% */}
-                    <Card className="lg:col-span-3">
-                        <SectionHeader
-                            title="Aktivitas Sistem per Modul"
-                            showInfo
-                        />
-                        <div className="p-2 md:p-3">
-                            {modActs.length > 0 ? (
-                                <ECharts
-                                    echarts={echarts}
-                                    option={barOption}
-                                    style={{ height: 260 }}
-                                    notMerge
-                                    lazyUpdate
-                                />
-                            ) : (
-                                <div className="flex h-65 items-center justify-center text-xs text-gray-400">
-                                    Belum ada data modul
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
+                    <EntranceItem className="lg:col-span-3">
+                        <Card>
+                            <SectionHeader
+                                title="Aktivitas Sistem per Modul"
+                                showInfo
+                            />
+                            <div className="p-2 md:p-3">
+                                {modActs.length > 0 ? (
+                                    <div
+                                        ref={barChartRef}
+                                        style={{ height: 260 }}
+                                    >
+                                        {barChartEntered && (
+                                            <ECharts
+                                                echarts={echarts}
+                                                option={barOption}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                }}
+                                                notMerge
+                                                lazyUpdate
+                                            />
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex h-65 items-center justify-center text-xs text-gray-400">
+                                        Belum ada data modul
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </EntranceItem>
+                </EntranceContainer>
 
                 {/* ── ROW 4: SECURITY + MODULE STATUS ── */}
-                <div className="grid gap-4 lg:grid-cols-5 lg:gap-5">
+                <EntranceContainer
+                    stagger={0.1}
+                    className="grid gap-4 lg:grid-cols-5 lg:gap-5"
+                >
                     {/* Security — 43% */}
-                    <Card className="lg:col-span-2">
-                        <SectionHeader
-                            title="Monitoring Keamanan Akses"
-                            showInfo
-                        />
-                        <div className="flex flex-col gap-4 p-3 md:flex-row md:p-4">
-                            <div className="min-h-40 flex-1">
-                                <ECharts
-                                    echarts={echarts}
-                                    option={lineOption}
-                                    style={{ height: 150, width: '100%' }}
-                                    notMerge
-                                    lazyUpdate
-                                />
-                            </div>
-                            <div className="h-px w-full bg-[#e5e7eb] md:h-full md:w-px" />
-                            <div className="flex shrink-0 flex-col justify-center gap-0 md:w-35">
-                                {securityCounters.map((c) => (
-                                    <div
-                                        key={c.label}
-                                        className="flex items-center gap-2.5 py-2 first:pt-0 last:pb-0"
-                                    >
+                    <EntranceItem className="lg:col-span-2">
+                        <Card>
+                            <SectionHeader
+                                title="Monitoring Keamanan Akses"
+                                showInfo
+                            />
+                            <div className="flex flex-col gap-4 p-3 md:flex-row md:p-4">
+                                <div
+                                    ref={lineChartRef}
+                                    className="min-h-40 flex-1"
+                                >
+                                    {lineChartEntered && (
+                                        <ECharts
+                                            echarts={echarts}
+                                            option={lineOption}
+                                            style={{
+                                                height: 150,
+                                                width: '100%',
+                                            }}
+                                            notMerge
+                                            lazyUpdate
+                                        />
+                                    )}
+                                </div>
+                                <div className="h-px w-full bg-[#e5e7eb] md:h-full md:w-px" />
+                                <div className="flex shrink-0 flex-col justify-center gap-0 md:w-35">
+                                    {securityCounters.map((c) => (
                                         <div
-                                            className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${c.iconBg}`}
+                                            key={c.label}
+                                            className="flex items-center gap-2.5 py-2 first:pt-0 last:pb-0"
                                         >
-                                            <c.icon
-                                                className="size-4"
-                                                style={{ color: c.iconColor }}
-                                            />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-[9px] text-gray-500">
-                                                {c.label}
-                                            </p>
-                                            <span className="text-sm font-bold text-[#062f1d]">
-                                                {c.value}
-                                            </span>
-                                            <p
-                                                className="text-[9px]"
-                                                style={{
-                                                    color: c.deltaColor,
-                                                }}
+                                            <div
+                                                className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${c.iconBg}`}
                                             >
-                                                {c.delta}
-                                            </p>
+                                                <c.icon
+                                                    className="size-4"
+                                                    style={{
+                                                        color: c.iconColor,
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-[9px] text-gray-500">
+                                                    {c.label}
+                                                </p>
+                                                <AnimatedCounter
+                                                    to={c.value}
+                                                    className="text-sm font-bold text-[#062f1d]"
+                                                />
+                                                <p
+                                                    className="text-[9px]"
+                                                    style={{
+                                                        color: c.deltaColor,
+                                                    }}
+                                                >
+                                                    {c.delta}
+                                                </p>
+                                            </div>
                                         </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </Card>
+                    </EntranceItem>
+
+                    {/* Module Status — 57% */}
+                    <EntranceItem className="lg:col-span-3">
+                        <Card>
+                            <SectionHeader
+                                title="Status Modul Sistem"
+                                showInfo
+                            />
+                            <div className="grid grid-cols-1 divide-y divide-[#e5e7eb] md:grid-cols-2 md:divide-x md:divide-y-0">
+                                {modStatuses.map((mod) => (
+                                    <div
+                                        key={mod.name}
+                                        className="flex items-center justify-between px-4 py-3 md:px-5"
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="relative flex size-2">
+                                                <span className="absolute size-full rounded-full bg-emerald-400 opacity-25" />
+                                                <span className="relative size-2 rounded-full bg-emerald-500" />
+                                            </span>
+                                            <span className="text-[12px] font-medium text-[#062f1d]">
+                                                {mod.name}
+                                            </span>
+                                        </div>
+                                        {mod.status === 'Aktif' ? (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                                                <CheckCircle2 className="size-3" />
+                                                Aktif
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-medium text-amber-700">
+                                                <AlertTriangle className="size-3" />
+                                                Perlu Cek
+                                            </span>
+                                        )}
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </Card>
-
-                    {/* Module Status — 57% */}
-                    <Card className="lg:col-span-3">
-                        <SectionHeader title="Status Modul Sistem" showInfo />
-                        <div className="grid grid-cols-1 divide-y divide-[#e5e7eb] md:grid-cols-2 md:divide-x md:divide-y-0">
-                            {modStatuses.map((mod) => (
-                                <div
-                                    key={mod.name}
-                                    className="flex items-center justify-between px-4 py-3 md:px-5"
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <span className="relative flex size-2">
-                                            <span className="absolute size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                                            <span className="relative size-2 rounded-full bg-emerald-500" />
-                                        </span>
-                                        <span className="text-[12px] font-medium text-[#062f1d]">
-                                            {mod.name}
-                                        </span>
-                                    </div>
-                                    {mod.status === 'Aktif' ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                                            <CheckCircle2 className="size-3" />
-                                            Aktif
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-medium text-amber-700">
-                                            <AlertTriangle className="size-3" />
-                                            Perlu Cek
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                </div>
+                        </Card>
+                    </EntranceItem>
+                </EntranceContainer>
 
                 {/* ── ROW 5: QUICK ACTIONS / STRUCTURE / ACTIVITY ── */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+                <EntranceContainer
+                    stagger={0.08}
+                    className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5"
+                >
                     {/* Quick Actions */}
-                    <Card>
-                        <SectionHeader title="Aksi Cepat" />
-                        <div className="grid grid-cols-3 gap-2 p-3 md:p-4">
-                            {QUICK_ACTIONS.map((qa) => (
-                                <QuickAction
-                                    key={qa.label}
-                                    icon={qa.icon}
-                                    label={qa.label}
-                                    href={qa.href}
-                                    color={qa.color}
-                                />
-                            ))}
-                        </div>
-                    </Card>
-
-                    {/* System Structure */}
-                    <Card>
-                        <SectionHeader title="Struktur Sistem SANDU" />
-                        <div className="px-3 py-5 md:px-4">
-                            <div className="flex items-start">
-                                {STRUCTURE_STEPS.map((step, i) => (
-                                    <StructureStep
-                                        key={step.label}
-                                        icon={step.icon}
-                                        label={step.label}
-                                        description={step.description}
-                                        index={i}
-                                        total={STRUCTURE_STEPS.length}
+                    <EntranceItem>
+                        <Card>
+                            <SectionHeader title="Aksi Cepat" />
+                            <div className="grid grid-cols-3 gap-2 p-3 md:p-4">
+                                {QUICK_ACTIONS.map((qa) => (
+                                    <QuickAction
+                                        key={qa.label}
+                                        icon={qa.icon}
+                                        label={qa.label}
+                                        href={qa.href}
+                                        color={qa.color}
                                     />
                                 ))}
                             </div>
-                        </div>
-                    </Card>
+                        </Card>
+                    </EntranceItem>
+
+                    {/* System Structure */}
+                    <EntranceItem>
+                        <Card>
+                            <SectionHeader title="Struktur Sistem SANDU" />
+                            <div className="px-3 py-5 md:px-4">
+                                <div className="flex items-start">
+                                    {STRUCTURE_STEPS.map((step, i) => (
+                                        <StructureStep
+                                            key={step.label}
+                                            icon={step.icon}
+                                            label={step.label}
+                                            description={step.description}
+                                            index={i}
+                                            total={STRUCTURE_STEPS.length}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </Card>
+                    </EntranceItem>
 
                     {/* Recent Activity */}
-                    <Card>
-                        <SectionHeader title="Aktivitas Sistem Terbaru" />
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-[#e5e7eb] bg-gray-50/60">
-                                        <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
-                                            Waktu
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
-                                            Pengguna
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
-                                            Aktivitas
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
-                                            Modul
-                                        </th>
-                                        <th className="px-3 py-2 text-center text-[10px] font-medium text-gray-500 md:px-4">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#e5e7eb]">
-                                    {LATEST_ACTIVITIES.map((act, i) => (
-                                        <tr
-                                            key={i}
-                                            className="transition-colors hover:bg-gray-50/80"
-                                        >
-                                            <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
-                                                {act.waktu}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-[11px] font-medium text-[#062f1d] md:px-4">
-                                                {act.pengguna}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
-                                                {act.aktivitas}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
-                                                {act.modul}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-center md:px-4">
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                                                    <CheckCircle2 className="size-3" />
-                                                    {act.status}
-                                                </span>
-                                            </td>
+                    <EntranceItem>
+                        <Card>
+                            <SectionHeader title="Aktivitas Sistem Terbaru" />
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-[#e5e7eb] bg-gray-50/60">
+                                            <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
+                                                Waktu
+                                            </th>
+                                            <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
+                                                Pengguna
+                                            </th>
+                                            <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
+                                                Aktivitas
+                                            </th>
+                                            <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 md:px-4">
+                                                Modul
+                                            </th>
+                                            <th className="px-3 py-2 text-center text-[10px] font-medium text-gray-500 md:px-4">
+                                                Status
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
-                </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#e5e7eb]">
+                                        {LATEST_ACTIVITIES.map((act, i) => (
+                                            <tr key={i}>
+                                                <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
+                                                    {act.waktu}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-[11px] font-medium text-[#062f1d] md:px-4">
+                                                    {act.pengguna}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
+                                                    {act.aktivitas}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-[11px] text-gray-500 md:px-4">
+                                                    {act.modul}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-center md:px-4">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                                                        <CheckCircle2 className="size-3" />
+                                                        {act.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card>
+                    </EntranceItem>
+                </EntranceContainer>
 
                 {/* ── FOOTER ── */}
                 <div className="mt-2 flex items-center justify-center border-t border-[#e5e7eb] pt-3 pb-1 text-[10px] text-gray-400">
