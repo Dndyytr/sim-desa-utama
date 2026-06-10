@@ -50,6 +50,12 @@ class PermissionSeeder extends Seeder
         ['name' => 'u-residents', 'guard_name' => 'web', 'feature' => 'resident', 'title' => 'Update'],
         ['name' => 'd-residents', 'guard_name' => 'web', 'feature' => 'resident', 'title' => 'Delete'],
 
+        // Family
+        ['name' => 'r-familys', 'guard_name' => 'web', 'feature' => 'family', 'title' => 'Read'],
+        ['name' => 'c-familys', 'guard_name' => 'web', 'feature' => 'family', 'title' => 'Create'],
+        ['name' => 'u-familys', 'guard_name' => 'web', 'feature' => 'family', 'title' => 'Update'],
+        ['name' => 'd-familys', 'guard_name' => 'web', 'feature' => 'family', 'title' => 'Delete'],
+
     ];
 
     /**

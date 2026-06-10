@@ -32,4 +32,14 @@ class Resident extends Model
             'is_active' => 'boolean',
         ];
     }
+
+    public function family()
+    {
+        return $this->hasOne(Family::class, 'head_resident_id', 'id');
+    }
+
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class, 'resident_id');
+    }
 }

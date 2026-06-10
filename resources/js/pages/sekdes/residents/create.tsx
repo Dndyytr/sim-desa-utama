@@ -478,7 +478,7 @@ export default function ResidentsCreate() {
                                     </section>
                                 </div>
 
-                                <aside className="bg-yellow/50 flex flex-col gap-2 overflow-hidden rounded-lg border-[1.5px] border-(--secondary) p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
+                                <aside className="flex flex-col gap-2 overflow-hidden rounded-lg border-[1.5px] border-(--secondary) bg-yellow-50 p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
                                     <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">
                                         <div className="relative z-2 min-w-max shrink-0">
                                             <span className="grid size-10.25 place-items-center rounded-full border border-(--secondary) bg-(--secondary)/10 bp360:size-10.5 bp400:size-10.75 md:size-11.25 lg:size-11.75 xl:size-12.25 2xl:size-12.75">
