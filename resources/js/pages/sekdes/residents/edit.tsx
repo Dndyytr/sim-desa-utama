@@ -572,7 +572,7 @@ export default function ResidentsEdit({ resident }: { resident: Resident }) {
                                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                                     >
                                         <ArrowLeft className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
-                                        Batal
+                                        Kembali
                                     </Button>
                                 </Link>
                                 <div className="ml-auto flex gap-2">
