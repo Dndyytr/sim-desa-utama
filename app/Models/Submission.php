@@ -51,4 +51,12 @@ class Submission extends Model
     {
         return $this->hasMany(SubmissionAttachment::class, 'submission_id');
     }
+
+    /**
+     * Get the service logs for the submission.
+     */
+    public function serviceLogs(): HasMany
+    {
+        return $this->hasMany(ServiceLog::class, 'submission_id')->orderBy('created_at', 'desc');
+    }
 }

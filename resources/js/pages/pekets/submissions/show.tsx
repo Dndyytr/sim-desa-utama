@@ -1,17 +1,47 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
+    Ban,
+    Calendar,
     Download,
+    Edit2,
     FileText,
     FileUp,
+    History,
     MapPin,
     Tag,
     User,
 } from 'lucide-react';
+import { useState } from 'react';
 
-import { buttonVariants } from '@/components/ui/button';
+import InputError from '@/components/input-error';
+import { Button, buttonVariants } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { index } from '@/routes/submissions';
+
+interface ServiceLog {
+    id: number;
+    submission_id: number;
+    stage: string;
+    activity: string;
+    notes: string | null;
+    created_at: string;
+    performer?: {
+        id: number;
+        name: string;
+    };
+}
 
 interface Submission {
     id: number;
@@ -27,7 +57,8 @@ interface Submission {
         | 'rejected'
         | 'processing'
         | 'approved'
-        | 'completed';
+        | 'completed'
+        | 'cancelled';
     source: 'offline' | 'mobile' | 'website';
     notes?: string;
     created_at: string;
@@ -62,6 +93,7 @@ interface Submission {
             name: string;
         };
     }>;
+    service_logs?: ServiceLog[];
 }
 
 export default function SubmissionsShow({
@@ -69,6 +101,22 @@ export default function SubmissionsShow({
 }: {
     submission: Submission;
 }) {
+    const [isCancelOpen, setIsCancelOpen] = useState(false);
+    const cancelForm = useForm({
+        reason: '',
+    });
+
+    const handleCancelSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        cancelForm.patch(route('submissions.cancel', submission.id), {
+            onSuccess: () => {
+                setIsCancelOpen(false);
+                cancelForm.reset();
+            },
+            preserveScroll: true,
+        });
+    };
+
     const getStatusBadge = (status: Submission['status']) => {
         switch (status) {
             case 'pending':
@@ -83,6 +131,8 @@ export default function SubmissionsShow({
                 return 'bg-emerald-100 text-emerald-800';
             case 'completed':
                 return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-stone-150 text-stone-700 border border-stone-300';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -102,6 +152,8 @@ export default function SubmissionsShow({
                 return 'Disetujui';
             case 'completed':
                 return 'Selesai';
+            case 'cancelled':
+                return 'Dibatalkan';
             default:
                 return status;
         }
@@ -162,7 +214,7 @@ export default function SubmissionsShow({
 
                 {/* Main Content Grid */}
                 <div className="grid gap-2 bp400:gap-2.5 md:gap-3 lg:grid-cols-3">
-                    {/* Left Column: Detail Pengajuan */}
+                    {/* Left Column: Detail Pengajuan & Service Logs */}
                     <div className="flex flex-col gap-2 bp400:gap-2.5 md:gap-3 lg:col-span-2">
                         {/* Detail Info Card */}
                         <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
@@ -278,6 +330,66 @@ export default function SubmissionsShow({
                                 )}
                             </div>
                         </div>
+
+                        {/* Service Logs Card */}
+                        <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
+                            <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">
+                                <div className="grid size-8.25 shrink-0 place-items-center rounded-full bg-(--primary)/10 text-(--primary) bp360:size-8.5 bp400:size-8.75 md:size-9.25 lg:size-9.75 xl:size-10.25 2xl:size-10.75">
+                                    <History className="size-4 bp360:size-4.25 bp400:size-4.5 md:size-4.75 lg:size-5.25 xl:size-5.75 2xl:size-6.25" />
+                                </div>
+                                <h2 className="t-size3 font-semibold text-(--primary)">
+                                    Riwayat Proses Layanan (Service Logs)
+                                </h2>
+                            </div>
+
+                            <div className="relative mt-2 flex flex-col gap-4 border-l border-(--primary)/20 pl-4">
+                                {submission.service_logs &&
+                                submission.service_logs.length > 0 ? (
+                                    submission.service_logs.map((log) => (
+                                        <div key={log.id} className="relative">
+                                            {/* Bullet dot */}
+                                            <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-white bg-(--primary) ring-2 ring-(--primary)/30"></span>
+
+                                            <div className="flex flex-col">
+                                                <div className="flex flex-wrap items-baseline gap-x-2">
+                                                    <span className="t-size3 font-bold text-stone-800">
+                                                        {log.activity}
+                                                    </span>
+                                                    <span className="t-size1 rounded bg-stone-100 px-1.5 py-0.5 font-semibold text-stone-600">
+                                                        {log.stage}
+                                                    </span>
+                                                </div>
+                                                <span className="t-size1 mt-0.5 inline-flex items-center gap-1.5 font-medium text-stone-400">
+                                                    <Calendar className="size-3" />
+                                                    {new Date(
+                                                        log.created_at,
+                                                    ).toLocaleString('id-ID', {
+                                                        dateStyle: 'medium',
+                                                        timeStyle: 'short',
+                                                    })}{' '}
+                                                    • Oleh:{' '}
+                                                    {log.performer?.name ||
+                                                        'Sistem'}
+                                                </span>
+                                                {log.notes && (
+                                                    <p className="t-size2 mt-1 rounded border bg-stone-50/50 p-2 font-medium whitespace-pre-wrap text-stone-600">
+                                                        {log.notes}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="relative">
+                                        <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-white bg-stone-300 ring-2 ring-stone-200"></span>
+                                        <p className="t-size2 font-medium text-stone-500 italic">
+                                            Tidak ada riwayat aktivitas yang
+                                            tercatat.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Column: Profile Pemohon */}
@@ -376,7 +488,7 @@ export default function SubmissionsShow({
                     </div>
                 </div>
 
-                {/* Back Button Footer */}
+                {/* Back & Actions Button Footer */}
                 <div className="mt-auto flex flex-wrap justify-between gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
                     <Link
                         href={route('submissions.index')}
@@ -388,8 +500,105 @@ export default function SubmissionsShow({
                         <ArrowLeft className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                         Kembali
                     </Link>
+
+                    {submission.status === 'pending' && (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={route('submissions.edit', submission.id)}
+                                className={cn(
+                                    buttonVariants({ variant: 'outline' }),
+                                    't-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none',
+                                )}
+                            >
+                                <Edit2 className="mr-1.5 size-3.5" />
+                                Ubah Pengajuan
+                            </Link>
+
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => setIsCancelOpen(true)}
+                                className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                            >
+                                <Ban className="mr-1.5 size-3.5" />
+                                Batalkan Pengajuan
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Cancel Confirmation Dialog */}
+            <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
+                <DialogContent>
+                    <div className="relative mx-auto -mt-6 flex w-max flex-col gap-2 rounded-full bg-white p-2.5 shadow-[0_5px_7px_0_rgba(0,0,0,0.2)]">
+                        <div className="relative w-max">
+                            <span className="absolute inset-2 z-1 animate-ping-slow rounded-full bg-red-600 opacity-20"></span>
+                            <Ban className="relative z-2 size-12 text-red-600" />
+                        </div>
+                    </div>
+
+                    <DialogHeader className="t-size2 text-center">
+                        <DialogTitle className="text-[1.3em] text-red-600">
+                            Batalkan Pengajuan
+                        </DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin membatalkan pengajuan ini?
+                            Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form
+                        onSubmit={handleCancelSubmit}
+                        className="flex flex-col gap-3"
+                    >
+                        <div className="flex flex-col gap-1.5">
+                            <Label
+                                htmlFor="cancel_reason"
+                                className="t-size3 font-semibold text-(--font-color)"
+                            >
+                                Alasan Pembatalan
+                            </Label>
+                            <Textarea
+                                id="cancel_reason"
+                                value={cancelForm.data.reason}
+                                onChange={(e) =>
+                                    cancelForm.setData('reason', e.target.value)
+                                }
+                                placeholder="Masukkan alasan mengapa pengajuan ini dibatalkan..."
+                                required
+                                rows={3}
+                                className="t-size3"
+                            />
+                            <InputError message={cancelForm.errors.reason} />
+                        </div>
+
+                        <DialogFooter className="mt-2">
+                            <DialogClose asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setIsCancelOpen(false);
+                                        cancelForm.reset();
+                                    }}
+                                    className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                                >
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                disabled={cancelForm.processing}
+                                className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                            >
+                                Ya, Batalkan
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
@@ -402,7 +611,7 @@ SubmissionsShow.layout = {
         },
         {
             title: 'Detail Pengajuan',
-            href: index(), // Fallback or dynamic href, can be index()
+            href: '#',
         },
     ],
 };
