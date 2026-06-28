@@ -805,6 +805,7 @@ export default function SubmissionsShow({
     );
 }
 
+// layout
 SubmissionsShow.layout = {
     breadcrumbs: [
         {
