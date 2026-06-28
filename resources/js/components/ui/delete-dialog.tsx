@@ -45,7 +45,7 @@ export function DeleteDialog({
                             <Trash2 className="size-8.5 bp360:size-9 bp400:size-9.5 md:size-10 lg:size-10.5 xl:size-11 2xl:size-11.5" />
                         </span>
                     </div>
-                    <AlertDialogTitle className="t-size7">
+                    <AlertDialogTitle className="t-size8">
                         {title}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="t-size3">

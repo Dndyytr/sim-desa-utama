@@ -31,7 +31,7 @@ export default function AuthSimpleLayout({
                             alt="background"
                         />
                         <div className="absolute bottom-0 z-4 mx-2 my-2 flex flex-col lg:mx-4 lg:my-6 lg:gap-2">
-                            <h1 className="t-size7 animate-fade-up font-bold text-white">
+                            <h1 className="t-size8 animate-fade-up font-bold text-white">
                                 Selamat datang di SANDU, Sistem Andalan Desa
                                 Utama
                             </h1>
@@ -94,7 +94,7 @@ export default function AuthSimpleLayout({
                             </Link>
                         </div> */}
                         <div className="mb-1 bp360:mb-1.25 bp400:mb-1.5 md:mb-1.75 lg:mb-2 xl:mb-2.25 2xl:mb-2.5">
-                            <h1 className="t-size7 animate-fade-left font-bold text-(--primary)">
+                            <h1 className="t-size8 animate-fade-left font-bold text-(--primary)">
                                 {title}
                             </h1>
                             <p className="t-size3 animate-fade-left font-medium text-(--font-color)/70 opacity-0 delay-500">

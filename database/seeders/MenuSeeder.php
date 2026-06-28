@@ -96,7 +96,16 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id',
         ],
-        // Tambahkan menu lainnya sesuai kebutuhan
+        [
+            'parent_id' => null,
+            'title' => 'Input Pengajuan Offline',
+            'url' => 'submissions.index',
+            'tag' => 'submissions',
+            'icon' => 'FileSignature',
+            'permission' => 'submission',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
     ];
 
     /**
