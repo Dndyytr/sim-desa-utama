@@ -3,6 +3,7 @@ import {
     ArrowLeft,
     Ban,
     Calendar,
+    CheckCircle,
     Download,
     Edit2,
     FileText,
@@ -112,6 +113,23 @@ export default function SubmissionsShow({
             onSuccess: () => {
                 setIsCancelOpen(false);
                 cancelForm.reset();
+            },
+            preserveScroll: true,
+        });
+    };
+
+    const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+    const verifyForm = useForm({
+        action: 'approve',
+        notes: '',
+    });
+
+    const handleVerifySubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        verifyForm.patch(route('submissions.verify', submission.id), {
+            onSuccess: () => {
+                setIsVerifyOpen(false);
+                verifyForm.reset();
             },
             preserveScroll: true,
         });
@@ -523,6 +541,15 @@ export default function SubmissionsShow({
                                 <Ban className="mr-1.5 size-3.5" />
                                 Batalkan Pengajuan
                             </Button>
+
+                            <Button
+                                type="button"
+                                onClick={() => setIsVerifyOpen(true)}
+                                className="t-size3 bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
+                            >
+                                <CheckCircle className="mr-1.5 size-3.5" />
+                                Verifikasi Berkas
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -594,6 +621,133 @@ export default function SubmissionsShow({
                                 className="t-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
                             >
                                 Ya, Batalkan
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Verification Dialog */}
+            <Dialog open={isVerifyOpen} onOpenChange={setIsVerifyOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader className="t-size2">
+                        <DialogTitle className="text-[1.3em] font-bold text-(--primary)">
+                            Verifikasi Berkas Pengajuan
+                        </DialogTitle>
+                        <DialogDescription>
+                            Tentukan apakah berkas pengajuan ini disetujui
+                            (verified) atau ditolak (rejected).
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form
+                        onSubmit={handleVerifySubmit}
+                        className="mt-2 flex flex-col gap-4"
+                    >
+                        {/* Radio or Buttons for Status Action */}
+                        <div className="flex flex-col gap-1.5">
+                            <Label className="t-size3 font-semibold text-(--font-color)">
+                                Hasil Verifikasi
+                            </Label>
+                            <div className="mt-1 grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        verifyForm.setData('action', 'approve')
+                                    }
+                                    className={cn(
+                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-3.5 text-center transition-all duration-200',
+                                        verifyForm.data.action === 'approve'
+                                            ? 'border-emerald-600 bg-emerald-50/50 text-emerald-800'
+                                            : 'border-stone-200 text-stone-600 hover:border-stone-300',
+                                    )}
+                                >
+                                    <CheckCircle className="mb-1 size-6 text-emerald-600" />
+                                    <span className="t-size3 font-bold">
+                                        Setujui (Verify)
+                                    </span>
+                                    <span className="t-size1 mt-0.5 text-stone-500">
+                                        Berkas lengkap & valid
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        verifyForm.setData('action', 'reject')
+                                    }
+                                    className={cn(
+                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-3.5 text-center transition-all duration-200',
+                                        verifyForm.data.action === 'reject'
+                                            ? 'border-red-600 bg-red-50/50 text-red-800'
+                                            : 'border-stone-200 text-stone-600 hover:border-stone-300',
+                                    )}
+                                >
+                                    <Ban className="mb-1 size-6 text-red-600" />
+                                    <span className="t-size3 font-bold">
+                                        Tolak (Reject)
+                                    </span>
+                                    <span className="t-size1 mt-0.5 text-stone-500">
+                                        Berkas tidak lengkap
+                                    </span>
+                                </button>
+                            </div>
+                            <InputError message={verifyForm.errors.action} />
+                        </div>
+
+                        {/* Textarea for Notes */}
+                        <div className="flex flex-col gap-1.5">
+                            <Label
+                                htmlFor="verify_notes"
+                                className="t-size3 font-semibold text-(--font-color)"
+                            >
+                                Catatan Verifikasi{' '}
+                                {verifyForm.data.action === 'reject' && (
+                                    <span className="text-red-500">*</span>
+                                )}
+                            </Label>
+                            <Textarea
+                                id="verify_notes"
+                                value={verifyForm.data.notes}
+                                onChange={(e) =>
+                                    verifyForm.setData('notes', e.target.value)
+                                }
+                                placeholder={
+                                    verifyForm.data.action === 'reject'
+                                        ? 'Masukkan alasan penolakan secara detail...'
+                                        : 'Masukkan catatan internal jika diperlukan...'
+                                }
+                                required={verifyForm.data.action === 'reject'}
+                                rows={4}
+                                className="t-size3"
+                            />
+                            <InputError message={verifyForm.errors.notes} />
+                        </div>
+
+                        <DialogFooter className="mt-3">
+                            <DialogClose asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setIsVerifyOpen(false);
+                                        verifyForm.reset();
+                                    }}
+                                    className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                                >
+                                    Batal
+                                </Button>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={verifyForm.processing}
+                                className={cn(
+                                    't-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none',
+                                    verifyForm.data.action === 'approve'
+                                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                        : 'bg-red-600 text-white hover:bg-red-700',
+                                )}
+                            >
+                                Proses Verifikasi
                             </Button>
                         </DialogFooter>
                     </form>

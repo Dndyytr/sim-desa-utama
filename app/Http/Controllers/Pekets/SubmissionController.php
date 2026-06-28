@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pekets;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListingRequest;
 use App\Models\Resident;
+use App\Models\Service;
 use App\Models\ServiceLog;
 use App\Models\Submission;
 use App\Models\SubmissionAttachment;
@@ -26,7 +27,7 @@ class SubmissionController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:r-submissions', only: ['index', 'show']),
             new Middleware('permission:c-submissions', only: ['create', 'store']),
-            new Middleware('permission:u-submissions', only: ['edit', 'update', 'cancel']),
+            new Middleware('permission:u-submissions', only: ['edit', 'update', 'cancel', 'verify']),
             new Middleware('permission:d-submissions', only: ['destroy', 'bulkDelete']),
         ];
     }
@@ -391,6 +392,98 @@ class SubmissionController extends Controller implements HasMiddleware
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('Gagal membatalkan pengajuan: '.$th->getMessage());
+
+            return redirect()->back()->with('error', 'Oops, terjadi kesalahan!');
+        }
+    }
+
+    /**
+     * Verify the specified submission.
+     */
+    public function verify(Request $request, Submission $submission)
+    {
+        if ($submission->status !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pengajuan dengan status Pending yang dapat diverifikasi.');
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'notes' => 'nullable|string|max:1000|required_if:action,reject',
+        ], [
+            'action.required' => 'Tindakan verifikasi wajib dipilih.',
+            'action.in' => 'Tindakan verifikasi tidak valid.',
+            'notes.required_if' => 'Catatan/alasan penolakan wajib diisi jika pengajuan ditolak.',
+            'notes.max' => 'Catatan maksimal 1000 karakter.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $action = $validated['action'];
+            $notes = $validated['notes'] ?? null;
+
+            if ($action === 'approve') {
+                $submission->status = 'verified';
+                $submission->notes = $notes;
+                $submission->save();
+
+                // Create Service record
+                // Safe service number generation with lock
+                $prefix = 'SRV-'.date('Ymd').'-';
+                $lastService = Service::where('service_number', 'like', $prefix.'%')
+                    ->orderBy('service_number', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($lastService) {
+                    $sequence = (int) substr($lastService->service_number, -5);
+                    $newSequence = $sequence + 1;
+                } else {
+                    $newSequence = 1;
+                }
+
+                $serviceNumber = $prefix.str_pad($newSequence, 5, '0', STR_PAD_LEFT);
+
+                $service = new Service;
+                $service->service_number = $serviceNumber;
+                $service->submission_id = $submission->id;
+                $service->status = 'processing';
+                $service->notes = $notes;
+                $service->save();
+
+                // Record service log
+                $serviceLog = new ServiceLog;
+                $serviceLog->submission_id = $submission->id;
+                $serviceLog->stage = 'Verification';
+                $serviceLog->activity = 'Verifikasi Berkas Disetujui';
+                $serviceLog->performed_by = auth()->id();
+                $serviceLog->notes = $notes;
+                $serviceLog->save();
+
+                $message = "Pengajuan {$submission->submission_number} berhasil diverifikasi dan layanan {$serviceNumber} telah dibuat.";
+            } else {
+                $submission->status = 'rejected';
+                $submission->notes = $notes;
+                $submission->save();
+
+                // Record service log
+                $serviceLog = new ServiceLog;
+                $serviceLog->submission_id = $submission->id;
+                $serviceLog->stage = 'Verification';
+                $serviceLog->activity = 'Verifikasi Berkas Ditolak';
+                $serviceLog->performed_by = auth()->id();
+                $serviceLog->notes = $notes;
+                $serviceLog->save();
+
+                $message = "Pengajuan {$submission->submission_number} telah ditolak.";
+            }
+
+            DB::commit();
+
+            return redirect()->route('submissions.index')->with('success', $message);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Gagal memverifikasi pengajuan: '.$th->getMessage());
 
             return redirect()->back()->with('error', 'Oops, terjadi kesalahan!');
         }
