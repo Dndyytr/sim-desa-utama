@@ -366,4 +366,108 @@ class SubmissionTest extends TestCase
             'status' => 'verified',
         ]);
     }
+
+    public function test_can_approve_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.verify', $submission->id), [
+            'action' => 'approve',
+            'notes' => 'Berkas lengkap dan sesuai',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'verified',
+            'notes' => 'Berkas lengkap dan sesuai',
+        ]);
+
+        $this->assertDatabaseHas('services', [
+            'submission_id' => $submission->id,
+            'status' => 'processing',
+            'notes' => 'Berkas lengkap dan sesuai',
+        ]);
+
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Verification',
+            'activity' => 'Verifikasi Berkas Disetujui',
+            'notes' => 'Berkas lengkap dan sesuai',
+        ]);
+    }
+
+    public function test_can_reject_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.verify', $submission->id), [
+            'action' => 'reject',
+            'notes' => 'KTP tidak terbaca jelas',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'rejected',
+            'notes' => 'KTP tidak terbaca jelas',
+        ]);
+
+        $this->assertDatabaseMissing('services', [
+            'submission_id' => $submission->id,
+        ]);
+
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Verification',
+            'activity' => 'Verifikasi Berkas Ditolak',
+            'notes' => 'KTP tidak terbaca jelas',
+        ]);
+    }
+
+    public function test_cannot_verify_non_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'verified';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.verify', $submission->id), [
+            'action' => 'approve',
+            'notes' => 'Setuju ulang',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'verified',
+        ]);
+    }
 }

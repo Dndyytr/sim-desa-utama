@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'submission_number',
@@ -58,5 +59,13 @@ class Submission extends Model
     public function serviceLogs(): HasMany
     {
         return $this->hasMany(ServiceLog::class, 'submission_id')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get the service record associated with the submission.
+     */
+    public function service(): HasOne
+    {
+        return $this->hasOne(Service::class, 'submission_id');
     }
 }

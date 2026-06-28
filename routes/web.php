@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pekets routes
     Route::prefix('pekets')->group(function () {
         Route::patch('submissions/{submission}/cancel', [SubmissionController::class, 'cancel'])->name('submissions.cancel');
+        Route::patch('submissions/{submission}/verify', [SubmissionController::class, 'verify'])->name('submissions.verify');
         Route::post('submissions/bulk-delete', [SubmissionController::class, 'bulkDelete'])->name('submissions.bulk-delete');
         Route::resource('submissions', SubmissionController::class);
     });
