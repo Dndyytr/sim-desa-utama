@@ -43,7 +43,7 @@ class SubmissionController extends Controller implements HasMiddleware
         $source = $request->input('source');
         $sort = $request->query('sort') ?? null;
 
-        if (! in_array($status, ['pending', 'verified', 'rejected', 'processing', 'approved', 'completed'], true)) {
+        if (! in_array($status, ['pending', 'verified', 'rejected', 'processing', 'approved', 'completed', 'needs_correction'], true)) {
             $status = null;
         }
 
@@ -231,7 +231,7 @@ class SubmissionController extends Controller implements HasMiddleware
      */
     public function edit(Submission $submission): Response|RedirectResponse
     {
-        if ($submission->status !== 'pending') {
+        if (! in_array($submission->status, ['pending', 'needs_correction'], true)) {
             return redirect()->route('submissions.index')->with('error', 'Pengajuan sudah memasuki tahap verifikasi dan tidak dapat diubah.');
         }
 
@@ -257,7 +257,7 @@ class SubmissionController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Submission $submission)
     {
-        if ($submission->status !== 'pending') {
+        if (! in_array($submission->status, ['pending', 'needs_correction'], true)) {
             return redirect()->route('submissions.index')->with('error', 'Pengajuan sudah memasuki tahap verifikasi dan tidak dapat diubah.');
         }
 
@@ -333,6 +333,10 @@ class SubmissionController extends Controller implements HasMiddleware
             $submission->type_service_id = $validated['type_service_id'];
             $submission->subject = $validated['subject'];
             $submission->description = $validated['description'] ?? null;
+            if ($submission->status === 'needs_correction') {
+                $submission->status = 'pending';
+                $changes[] = 'Status pengajuan dikembalikan ke Pending';
+            }
             $submission->save();
 
             // Record service log
@@ -407,12 +411,12 @@ class SubmissionController extends Controller implements HasMiddleware
         }
 
         $validated = $request->validate([
-            'action' => 'required|in:approve,reject',
-            'notes' => 'nullable|string|max:1000|required_if:action,reject',
+            'action' => 'required|in:approve,reject,needs_correction',
+            'notes' => 'nullable|string|max:1000|required_if:action,reject,needs_correction',
         ], [
             'action.required' => 'Tindakan verifikasi wajib dipilih.',
             'action.in' => 'Tindakan verifikasi tidak valid.',
-            'notes.required_if' => 'Catatan/alasan penolakan wajib diisi jika pengajuan ditolak.',
+            'notes.required_if' => 'Catatan/alasan penolakan atau perbaikan wajib diisi.',
             'notes.max' => 'Catatan maksimal 1000 karakter.',
         ]);
 
@@ -461,6 +465,21 @@ class SubmissionController extends Controller implements HasMiddleware
                 $serviceLog->save();
 
                 $message = "Pengajuan {$submission->submission_number} berhasil diverifikasi dan layanan {$serviceNumber} telah dibuat.";
+            } elseif ($action === 'needs_correction') {
+                $submission->status = 'needs_correction';
+                $submission->notes = $notes;
+                $submission->save();
+
+                // Record service log
+                $serviceLog = new ServiceLog;
+                $serviceLog->submission_id = $submission->id;
+                $serviceLog->stage = 'Verification';
+                $serviceLog->activity = 'Perlu Perbaikan Berkas';
+                $serviceLog->performed_by = auth()->id();
+                $serviceLog->notes = $notes;
+                $serviceLog->save();
+
+                $message = "Pengajuan {$submission->submission_number} diminta perbaikan berkas.";
             } else {
                 $submission->status = 'rejected';
                 $submission->notes = $notes;

@@ -45,6 +45,7 @@ interface Submission {
     subject: string;
     description: string | null;
     status: string;
+    notes?: string;
     attachments: Attachment[];
 }
 
@@ -133,6 +134,18 @@ export default function SubmissionsEdit({
                     onSubmit={handleSubmit}
                     className="flex h-full flex-col gap-2"
                 >
+                    {submission.status === 'needs_correction' && (
+                        <div className="flex flex-col gap-1 rounded-lg border border-orange-200 bg-orange-50 p-3 shadow-sm">
+                            <span className="text-orange-850 text-[10px] font-bold tracking-wider uppercase">
+                                Catatan Perbaikan Verifikator
+                            </span>
+                            <p className="t-size2 font-semibold whitespace-pre-wrap text-orange-800">
+                                {submission.notes ||
+                                    'Mohon periksa kembali berkas/data yang diinputkan.'}
+                            </p>
+                        </div>
+                    )}
+
                     {/* Section 1: Pemohon & Layanan */}
                     <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
                         <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">

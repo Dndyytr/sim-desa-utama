@@ -470,4 +470,95 @@ class SubmissionTest extends TestCase
             'status' => 'verified',
         ]);
     }
+
+    public function test_can_request_revision_on_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.verify', $submission->id), [
+            'action' => 'needs_correction',
+            'notes' => 'Tolong lengkapi foto KTP terbaru',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'needs_correction',
+            'notes' => 'Tolong lengkapi foto KTP terbaru',
+        ]);
+
+        $this->assertDatabaseMissing('services', [
+            'submission_id' => $submission->id,
+        ]);
+
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Verification',
+            'activity' => 'Perlu Perbaikan Berkas',
+            'notes' => 'Tolong lengkapi foto KTP terbaru',
+        ]);
+    }
+
+    public function test_can_render_edit_submission_page_with_needs_correction_status()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'needs_correction';
+        $submission->save();
+
+        $response = $this->get(route('submissions.edit', $submission->id));
+        $response->assertOk();
+    }
+
+    public function test_can_update_needs_correction_submission_and_resets_status_to_pending()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'needs_correction';
+        $submission->save();
+
+        $response = $this->put(route('submissions.update', $submission->id), [
+            'type_service_id' => $typeService->id,
+            'subject' => 'Permohonan SKU Direvisi',
+            'description' => 'Sudah dilengkapi KTP baru',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'subject' => 'Permohonan SKU Direvisi',
+            'description' => 'Sudah dilengkapi KTP baru',
+            'status' => 'pending',
+        ]);
+
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Submission',
+            'activity' => 'Pengajuan Diperbarui',
+        ]);
+    }
 }
