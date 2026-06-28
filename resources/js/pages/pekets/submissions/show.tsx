@@ -525,7 +525,8 @@ export default function SubmissionsShow({
                         Kembali
                     </Link>
 
-                    {(submission.status === 'pending' || submission.status === 'needs_correction') && (
+                    {(submission.status === 'pending' ||
+                        submission.status === 'needs_correction') && (
                         <div className="flex items-center gap-2">
                             <Link
                                 href={route('submissions.edit', submission.id)}
@@ -646,7 +647,8 @@ export default function SubmissionsShow({
                         </DialogTitle>
                         <DialogDescription>
                             Tentukan apakah berkas pengajuan ini disetujui
-                            (verified), perlu perbaikan (needs correction), atau ditolak (rejected).
+                            (verified), perlu perbaikan (needs correction), atau
+                            ditolak (rejected).
                         </DialogDescription>
                     </DialogHeader>
 
@@ -676,18 +678,22 @@ export default function SubmissionsShow({
                                     <span className="t-size2 font-bold">
                                         Setujui (Verify)
                                     </span>
-                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
+                                    <span className="mt-0.5 text-[10px] leading-tight text-stone-500">
                                         Berkas lengkap & valid
                                     </span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        verifyForm.setData('action', 'needs_correction')
+                                        verifyForm.setData(
+                                            'action',
+                                            'needs_correction',
+                                        )
                                     }
                                     className={cn(
                                         'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-2.5 text-center transition-all duration-200',
-                                        verifyForm.data.action === 'needs_correction'
+                                        verifyForm.data.action ===
+                                            'needs_correction'
                                             ? 'border-orange-600 bg-orange-50/50 text-orange-800'
                                             : 'border-stone-200 text-stone-600 hover:border-stone-300',
                                     )}
@@ -696,7 +702,7 @@ export default function SubmissionsShow({
                                     <span className="t-size2 font-bold">
                                         Perbaikan
                                     </span>
-                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
+                                    <span className="mt-0.5 text-[10px] leading-tight text-stone-500">
                                         Perlu direvisi pemohon
                                     </span>
                                 </button>
@@ -716,7 +722,7 @@ export default function SubmissionsShow({
                                     <span className="t-size2 font-bold">
                                         Tolak (Reject)
                                     </span>
-                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
+                                    <span className="mt-0.5 text-[10px] leading-tight text-stone-500">
                                         Berkas tidak lengkap
                                     </span>
                                 </button>
@@ -732,7 +738,8 @@ export default function SubmissionsShow({
                             >
                                 Catatan Verifikasi{' '}
                                 {(verifyForm.data.action === 'reject' ||
-                                    verifyForm.data.action === 'needs_correction') && (
+                                    verifyForm.data.action ===
+                                        'needs_correction') && (
                                     <span className="text-red-500">*</span>
                                 )}
                             </Label>
@@ -745,13 +752,15 @@ export default function SubmissionsShow({
                                 placeholder={
                                     verifyForm.data.action === 'reject'
                                         ? 'Masukkan alasan penolakan secara detail...'
-                                        : verifyForm.data.action === 'needs_correction'
+                                        : verifyForm.data.action ===
+                                            'needs_correction'
                                           ? 'Masukkan rincian berkas yang perlu diperbaiki oleh pemohon...'
                                           : 'Masukkan catatan internal jika diperlukan...'
                                 }
                                 required={
                                     verifyForm.data.action === 'reject' ||
-                                    verifyForm.data.action === 'needs_correction'
+                                    verifyForm.data.action ===
+                                        'needs_correction'
                                 }
                                 rows={4}
                                 className="t-size3"
@@ -780,7 +789,8 @@ export default function SubmissionsShow({
                                     't-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none',
                                     verifyForm.data.action === 'approve'
                                         ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                        : verifyForm.data.action === 'needs_correction'
+                                        : verifyForm.data.action ===
+                                            'needs_correction'
                                           ? 'bg-orange-600 text-white hover:bg-orange-700'
                                           : 'bg-red-600 text-white hover:bg-red-700',
                                 )}

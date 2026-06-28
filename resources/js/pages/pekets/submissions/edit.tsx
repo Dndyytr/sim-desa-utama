@@ -136,11 +136,12 @@ export default function SubmissionsEdit({
                 >
                     {submission.status === 'needs_correction' && (
                         <div className="flex flex-col gap-1 rounded-lg border border-orange-200 bg-orange-50 p-3 shadow-sm">
-                            <span className="text-[10px] font-bold text-orange-850 uppercase tracking-wider">
+                            <span className="text-orange-850 text-[10px] font-bold tracking-wider uppercase">
                                 Catatan Perbaikan Verifikator
                             </span>
-                            <p className="t-size2 font-semibold text-orange-800 whitespace-pre-wrap">
-                                {submission.notes || 'Mohon periksa kembali berkas/data yang diinputkan.'}
+                            <p className="t-size2 font-semibold whitespace-pre-wrap text-orange-800">
+                                {submission.notes ||
+                                    'Mohon periksa kembali berkas/data yang diinputkan.'}
                             </p>
                         </div>
                     )}

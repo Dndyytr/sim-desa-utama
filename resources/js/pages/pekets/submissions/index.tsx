@@ -523,8 +523,10 @@ export default function SubmissionsIndex({
                                                         {can.includes(
                                                             'u-submissions',
                                                         ) &&
-                                                            (submission.status === 'pending' ||
-                                                                submission.status === 'needs_correction') && (
+                                                            (submission.status ===
+                                                                'pending' ||
+                                                                submission.status ===
+                                                                    'needs_correction') && (
                                                                 <Link
                                                                     href={route(
                                                                         'submissions.edit',
