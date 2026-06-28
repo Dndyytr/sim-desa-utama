@@ -175,7 +175,7 @@ export default function SubmissionsShow({
         <>
             <Head title={`Detail Pengajuan ${submission.submission_number}`} />
 
-            <div className="flex h-full flex-col gap-2 px-2 py-2 bp360:px-2.25 bp400:px-2.5 md:px-3 md:py-2.25 lg:px-3.5 lg:py-2.5 xl:px-4 xl:py-3 2xl:px-4.5 2xl:py-3.5">
+            <div className="flex h-full flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp360:py-2.25 bp400:gap-2.5 bp400:px-2.5 bp400:py-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
                 {/* Manual Breadcrumb */}
                 <div className="t-size2 font-medium text-stone-500">
                     Input Pengajuan Offline &gt; Detail Pengajuan &gt;{' '}
@@ -507,7 +507,7 @@ export default function SubmissionsShow({
                                 href={route('submissions.edit', submission.id)}
                                 className={cn(
                                     buttonVariants({ variant: 'outline' }),
-                                    't-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none',
+                                    't-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none',
                                 )}
                             >
                                 <Edit2 className="mr-1.5 size-3.5" />
@@ -518,7 +518,7 @@ export default function SubmissionsShow({
                                 type="button"
                                 variant="destructive"
                                 onClick={() => setIsCancelOpen(true)}
-                                className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                                className="t-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
                             >
                                 <Ban className="mr-1.5 size-3.5" />
                                 Batalkan Pengajuan
@@ -591,7 +591,7 @@ export default function SubmissionsShow({
                                 type="submit"
                                 variant="destructive"
                                 disabled={cancelForm.processing}
-                                className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                                className="t-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
                             >
                                 Ya, Batalkan
                             </Button>
