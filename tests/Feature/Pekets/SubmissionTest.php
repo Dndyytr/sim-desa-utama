@@ -20,9 +20,9 @@ class SubmissionTest extends TestCase
     {
         parent::setUp();
 
-        // Ensure permissions exist
         Permission::firstOrCreate(['name' => 'r-submissions', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'c-submissions', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'u-submissions', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'd-submissions', 'guard_name' => 'web']);
     }
 
@@ -203,5 +203,167 @@ class SubmissionTest extends TestCase
         $response = $this->delete(route('submissions.destroy', $submission->id));
         $response->assertRedirect(route('submissions.index'));
         $this->assertDatabaseHas('submissions', ['id' => $submission->id]);
+    }
+
+    public function test_can_render_edit_submission_page()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        $response = $this->get(route('submissions.edit', $submission->id));
+        $response->assertOk();
+    }
+
+    public function test_cannot_render_edit_page_if_non_pending()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'verified';
+        $submission->save();
+
+        $response = $this->get(route('submissions.edit', $submission->id));
+        $response->assertRedirect(route('submissions.index'));
+    }
+
+    public function test_can_update_pending_submission_successfully()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+        $newTypeService = $this->createTypeService(['service_code' => 'SKE', 'service_name' => 'Surat Keterangan Empat']);
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        Storage::fake('public');
+
+        $response = $this->put(route('submissions.update', $submission->id), [
+            'type_service_id' => $newTypeService->id,
+            'subject' => 'Permohonan SKE Baru',
+            'description' => 'Keperluan mendesak',
+            'attachments' => [
+                UploadedFile::fake()->create('dokumen_baru.pdf', 100),
+            ],
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'type_service_id' => $newTypeService->id,
+            'subject' => 'Permohonan SKE Baru',
+            'description' => 'Keperluan mendesak',
+        ]);
+
+        // Assert ServiceLog was created
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Submission',
+            'activity' => 'Pengajuan Diperbarui',
+        ]);
+    }
+
+    public function test_cannot_update_non_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'verified';
+        $submission->save();
+
+        $response = $this->put(route('submissions.update', $submission->id), [
+            'type_service_id' => $typeService->id,
+            'subject' => 'Permohonan SKU Baru',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'subject' => 'Permohonan SKU',
+        ]);
+    }
+
+    public function test_can_cancel_pending_submission_with_reason()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'pending';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.cancel', $submission->id), [
+            'reason' => 'Salah memilih pemohon',
+        ]);
+
+        $response->assertRedirect(route('submissions.index'));
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'cancelled',
+        ]);
+
+        // Assert ServiceLog was created with the cancel reason
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $submission->id,
+            'stage' => 'Submission',
+            'activity' => 'Pengajuan Dibatalkan',
+            'notes' => 'Alasan: Salah memilih pemohon',
+        ]);
+    }
+
+    public function test_cannot_cancel_non_pending_submission()
+    {
+        $this->signIn(['u-submissions']);
+        $resident = $this->createResident();
+        $typeService = $this->createTypeService();
+
+        $submission = new Submission;
+        $submission->submission_number = 'SUB-20260628-00001';
+        $submission->resident_id = $resident->id;
+        $submission->type_service_id = $typeService->id;
+        $submission->subject = 'Permohonan SKU';
+        $submission->status = 'verified';
+        $submission->save();
+
+        $response = $this->patch(route('submissions.cancel', $submission->id), [
+            'reason' => 'Batal saja',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('submissions', [
+            'id' => $submission->id,
+            'status' => 'verified',
+        ]);
     }
 }

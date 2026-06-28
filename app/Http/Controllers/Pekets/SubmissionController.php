@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Pekets;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListingRequest;
 use App\Models\Resident;
+use App\Models\ServiceLog;
 use App\Models\Submission;
 use App\Models\SubmissionAttachment;
 use App\Models\TypeService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -24,6 +26,7 @@ class SubmissionController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:r-submissions', only: ['index', 'show']),
             new Middleware('permission:c-submissions', only: ['create', 'store']),
+            new Middleware('permission:u-submissions', only: ['edit', 'update', 'cancel']),
             new Middleware('permission:d-submissions', only: ['destroy', 'bulkDelete']),
         ];
     }
@@ -190,6 +193,15 @@ class SubmissionController extends Controller implements HasMiddleware
                 }
             }
 
+            // Create service log
+            $serviceLog = new ServiceLog;
+            $serviceLog->submission_id = $submission->id;
+            $serviceLog->stage = 'Submission';
+            $serviceLog->activity = 'Pengajuan Dibuat';
+            $serviceLog->performed_by = auth()->id();
+            $serviceLog->notes = 'Pengajuan offline berhasil direkam oleh Petugas Loket.';
+            $serviceLog->save();
+
             DB::commit();
 
             return redirect()->route('submissions.index')->with('success', "Pengajuan {$submissionNumber} berhasil disimpan.");
@@ -206,11 +218,182 @@ class SubmissionController extends Controller implements HasMiddleware
      */
     public function show(Submission $submission): Response
     {
-        $submission->load(['resident', 'typeService', 'submittedBy', 'attachments.uploader']);
+        $submission->load(['resident', 'typeService', 'submittedBy', 'attachments.uploader', 'serviceLogs.performer']);
 
         return Inertia::render('pekets/submissions/show', [
             'submission' => $submission,
         ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Submission $submission): Response|RedirectResponse
+    {
+        if ($submission->status !== 'pending') {
+            return redirect()->route('submissions.index')->with('error', 'Pengajuan sudah memasuki tahap verifikasi dan tidak dapat diubah.');
+        }
+
+        $residents = Resident::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'nik', 'name']);
+
+        $typeServices = TypeService::where('is_active', true)
+            ->orderBy('service_name')
+            ->get(['id', 'service_code', 'service_name']);
+
+        $submission->load(['attachments']);
+
+        return Inertia::render('pekets/submissions/edit', [
+            'submission' => $submission,
+            'residents' => $residents,
+            'typeServices' => $typeServices,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Submission $submission)
+    {
+        if ($submission->status !== 'pending') {
+            return redirect()->route('submissions.index')->with('error', 'Pengajuan sudah memasuki tahap verifikasi dan tidak dapat diubah.');
+        }
+
+        $validated = $request->validate([
+            'type_service_id' => 'required|exists:type_services,id',
+            'subject' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:5120|mimes:pdf,jpg,jpeg,png,doc,docx',
+            'deleted_attachments' => 'nullable|array',
+            'deleted_attachments.*' => 'exists:submission_attachments,id',
+        ], [
+            'type_service_id.required' => 'Jenis Layanan wajib dipilih.',
+            'type_service_id.exists' => 'Jenis Layanan tidak valid.',
+            'subject.required' => 'Judul Pengajuan wajib diisi.',
+            'subject.max' => 'Judul Pengajuan maksimal 255 karakter.',
+            'attachments.*.max' => 'File lampiran maksimal 5MB.',
+            'attachments.*.mimes' => 'Format file lampiran hanya mendukung pdf, jpg, jpeg, png, doc, docx.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $submissionNumber = $submission->submission_number;
+
+            // Handle deleted attachments
+            if ($request->has('deleted_attachments')) {
+                foreach ($request->input('deleted_attachments') as $attachmentId) {
+                    $attachment = SubmissionAttachment::where('submission_id', $submission->id)->find($attachmentId);
+                    if ($attachment) {
+                        Storage::disk('public')->delete($attachment->file_path);
+                        $attachment->delete();
+                    }
+                }
+            }
+
+            // Handle new attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $fileName = $file->getClientOriginalName();
+                    $filePath = $file->storeAs(
+                        "submissions/{$submissionNumber}",
+                        $fileName,
+                        'public'
+                    );
+
+                    $attachment = new SubmissionAttachment;
+                    $attachment->submission_id = $submission->id;
+                    $attachment->file_name = $fileName;
+                    $attachment->file_path = $filePath;
+                    $attachment->file_type = $file->getClientMimeType();
+                    $attachment->file_size = $file->getSize();
+                    $attachment->uploaded_by = auth()->id();
+                    $attachment->save();
+                }
+            }
+
+            // Detect changes for logging
+            $changes = [];
+            if ($submission->type_service_id != $validated['type_service_id']) {
+                $oldService = TypeService::find($submission->type_service_id)?->service_name;
+                $newService = TypeService::find($validated['type_service_id'])?->service_name;
+                $changes[] = "Jenis Layanan diubah dari '{$oldService}' menjadi '{$newService}'";
+            }
+            if ($submission->subject != $validated['subject']) {
+                $changes[] = "Judul Pengajuan diubah dari '{$submission->subject}' menjadi '{$validated['subject']}'";
+            }
+            if ($submission->description != ($validated['description'] ?? null)) {
+                $changes[] = 'Keterangan/Keperluan diperbarui';
+            }
+
+            // Update submission
+            $submission->type_service_id = $validated['type_service_id'];
+            $submission->subject = $validated['subject'];
+            $submission->description = $validated['description'] ?? null;
+            $submission->save();
+
+            // Record service log
+            $serviceLog = new ServiceLog;
+            $serviceLog->submission_id = $submission->id;
+            $serviceLog->stage = 'Submission';
+            $serviceLog->activity = 'Pengajuan Diperbarui';
+            $serviceLog->performed_by = auth()->id();
+            $serviceLog->notes = count($changes) > 0 ? implode(', ', $changes) : 'Pengajuan diperbarui tanpa perubahan data utama.';
+            $serviceLog->save();
+
+            DB::commit();
+
+            return redirect()->route('submissions.index')->with('success', "Pengajuan {$submissionNumber} berhasil diperbarui.");
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Gagal memperbarui pengajuan: '.$th->getMessage());
+
+            return redirect()->route('submissions.index')->with('error', 'Oops, terjadi kesalahan!');
+        }
+    }
+
+    /**
+     * Cancel the specified submission.
+     */
+    public function cancel(Request $request, Submission $submission)
+    {
+        if ($submission->status !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pengajuan dengan status Pending yang dapat dibatalkan.');
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:1000',
+        ], [
+            'reason.required' => 'Alasan pembatalan wajib diisi.',
+            'reason.max' => 'Alasan pembatalan maksimal 1000 karakter.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $submission->status = 'cancelled';
+            $submission->save();
+
+            // Record service log
+            $serviceLog = new ServiceLog;
+            $serviceLog->submission_id = $submission->id;
+            $serviceLog->stage = 'Submission';
+            $serviceLog->activity = 'Pengajuan Dibatalkan';
+            $serviceLog->performed_by = auth()->id();
+            $serviceLog->notes = 'Alasan: '.$validated['reason'];
+            $serviceLog->save();
+
+            DB::commit();
+
+            return redirect()->route('submissions.index')->with('success', "Pengajuan {$submission->submission_number} berhasil dibatalkan.");
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Gagal membatalkan pengajuan: '.$th->getMessage());
+
+            return redirect()->back()->with('error', 'Oops, terjadi kesalahan!');
+        }
     }
 
     /**

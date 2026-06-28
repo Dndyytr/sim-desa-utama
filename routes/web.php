@@ -50,8 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Pekets routes
     Route::prefix('pekets')->group(function () {
+        Route::patch('submissions/{submission}/cancel', [SubmissionController::class, 'cancel'])->name('submissions.cancel');
         Route::post('submissions/bulk-delete', [SubmissionController::class, 'bulkDelete'])->name('submissions.bulk-delete');
-        Route::resource('submissions', SubmissionController::class)->except(['edit', 'update']);
+        Route::resource('submissions', SubmissionController::class);
     });
 });
 

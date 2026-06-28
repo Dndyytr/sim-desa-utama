@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { Eye, PlusCircle } from 'lucide-react';
+import { Eye, Pencil, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { BulkDeleteDialog } from '@/components/ui/bulk-delete';
@@ -34,7 +34,8 @@ interface Submission {
         | 'rejected'
         | 'processing'
         | 'approved'
-        | 'completed';
+        | 'completed'
+        | 'cancelled';
     source: 'offline' | 'mobile' | 'website';
     notes?: string;
     created_at: string;
@@ -177,6 +178,8 @@ export default function SubmissionsIndex({
                 return 'bg-emerald-100 text-emerald-800';
             case 'completed':
                 return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-stone-150 text-stone-700 border border-stone-300';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -196,6 +199,8 @@ export default function SubmissionsIndex({
                 return 'Disetujui';
             case 'completed':
                 return 'Selesai';
+            case 'cancelled':
+                return 'Dibatalkan';
             default:
                 return status;
         }
@@ -261,6 +266,9 @@ export default function SubmissionsIndex({
                                     </SelectItem>
                                     <SelectItem value="completed">
                                         Selesai
+                                    </SelectItem>
+                                    <SelectItem value="cancelled">
+                                        Dibatalkan
                                     </SelectItem>
                                 </SelectGroup>
                             </SelectContent>
@@ -504,6 +512,22 @@ export default function SubmissionsIndex({
                                                                 Detail
                                                             </Link>
                                                         )}
+                                                        {can.includes(
+                                                            'u-submissions',
+                                                        ) &&
+                                                            submission.status ===
+                                                                'pending' && (
+                                                                <Link
+                                                                    href={route(
+                                                                        'submissions.edit',
+                                                                        submission.id,
+                                                                    )}
+                                                                    className="inline-flex items-center gap-1 rounded-md border-[1.7px] border-amber-500 bg-amber-500/10 px-2.5 py-1.5 font-medium text-amber-600 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:border-amber-600 hover:bg-amber-500/20 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:border-amber-600 active:bg-amber-500/20 active:shadow-none bp360:px-3 bp360:py-2"
+                                                                >
+                                                                    <Pencil className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4" />
+                                                                    Ubah
+                                                                </Link>
+                                                            )}
                                                         {can.includes(
                                                             'd-submissions',
                                                         ) &&
