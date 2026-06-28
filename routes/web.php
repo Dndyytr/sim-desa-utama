@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Pekets\SubmissionController;
 use App\Http\Controllers\Sekdes\FamilyController;
 use App\Http\Controllers\Sekdes\ResidentController;
 use App\Http\Controllers\Sekdes\TypeServiceController;
@@ -45,6 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('residents', ResidentController::class);
         Route::post('familys/bulk-delete', [FamilyController::class, 'bulkDelete'])->name('familys.bulk-delete');
         Route::resource('familys', FamilyController::class);
+    });
+
+    // Pekets routes
+    Route::prefix('pekets')->group(function () {
+        Route::post('submissions/bulk-delete', [SubmissionController::class, 'bulkDelete'])->name('submissions.bulk-delete');
+        Route::resource('submissions', SubmissionController::class)->except(['edit', 'update']);
     });
 });
 
