@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
+    AlertCircle,
     ArrowLeft,
     Ban,
     Calendar,
@@ -59,7 +60,8 @@ interface Submission {
         | 'processing'
         | 'approved'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'needs_correction';
     source: 'offline' | 'mobile' | 'website';
     notes?: string;
     created_at: string;
@@ -139,6 +141,8 @@ export default function SubmissionsShow({
         switch (status) {
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800';
+            case 'needs_correction':
+                return 'bg-orange-100 text-orange-850 border border-orange-200';
             case 'verified':
                 return 'bg-blue-100 text-blue-800';
             case 'rejected':
@@ -160,6 +164,8 @@ export default function SubmissionsShow({
         switch (status) {
             case 'pending':
                 return 'Pending';
+            case 'needs_correction':
+                return 'Perlu Perbaikan';
             case 'verified':
                 return 'Terverifikasi';
             case 'rejected':
@@ -366,7 +372,7 @@ export default function SubmissionsShow({
                                     submission.service_logs.map((log) => (
                                         <div key={log.id} className="relative">
                                             {/* Bullet dot */}
-                                            <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-white bg-(--primary) ring-2 ring-(--primary)/30"></span>
+                                            <span className="absolute top-1.5 -left-5.25 size-2.5 rounded-full border-2 border-white bg-(--primary) ring-2 ring-(--primary)/30"></span>
 
                                             <div className="flex flex-col">
                                                 <div className="flex flex-wrap items-baseline gap-x-2">
@@ -399,7 +405,7 @@ export default function SubmissionsShow({
                                     ))
                                 ) : (
                                     <div className="relative">
-                                        <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-white bg-stone-300 ring-2 ring-stone-200"></span>
+                                        <span className="absolute top-1.5 -left-5.25 size-2.5 rounded-full border-2 border-white bg-stone-300 ring-2 ring-stone-200"></span>
                                         <p className="t-size2 font-medium text-stone-500 italic">
                                             Tidak ada riwayat aktivitas yang
                                             tercatat.
@@ -519,7 +525,7 @@ export default function SubmissionsShow({
                         Kembali
                     </Link>
 
-                    {submission.status === 'pending' && (
+                    {(submission.status === 'pending' || submission.status === 'needs_correction') && (
                         <div className="flex items-center gap-2">
                             <Link
                                 href={route('submissions.edit', submission.id)}
@@ -532,24 +538,28 @@ export default function SubmissionsShow({
                                 Ubah Pengajuan
                             </Link>
 
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={() => setIsCancelOpen(true)}
-                                className="t-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
-                            >
-                                <Ban className="mr-1.5 size-3.5" />
-                                Batalkan Pengajuan
-                            </Button>
+                            {submission.status === 'pending' && (
+                                <>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        onClick={() => setIsCancelOpen(true)}
+                                        className="t-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
+                                    >
+                                        <Ban className="mr-1.5 size-3.5" />
+                                        Batalkan Pengajuan
+                                    </Button>
 
-                            <Button
-                                type="button"
-                                onClick={() => setIsVerifyOpen(true)}
-                                className="t-size3 bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
-                            >
-                                <CheckCircle className="mr-1.5 size-3.5" />
-                                Verifikasi Berkas
-                            </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={() => setIsVerifyOpen(true)}
+                                        className="t-size3 bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
+                                    >
+                                        <CheckCircle className="mr-1.5 size-3.5" />
+                                        Verifikasi Berkas
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
@@ -629,14 +639,14 @@ export default function SubmissionsShow({
 
             {/* Verification Dialog */}
             <Dialog open={isVerifyOpen} onOpenChange={setIsVerifyOpen}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-137.5">
                     <DialogHeader className="t-size2">
                         <DialogTitle className="text-[1.3em] font-bold text-(--primary)">
                             Verifikasi Berkas Pengajuan
                         </DialogTitle>
                         <DialogDescription>
                             Tentukan apakah berkas pengajuan ini disetujui
-                            (verified) atau ditolak (rejected).
+                            (verified), perlu perbaikan (needs correction), atau ditolak (rejected).
                         </DialogDescription>
                     </DialogHeader>
 
@@ -649,25 +659,45 @@ export default function SubmissionsShow({
                             <Label className="t-size3 font-semibold text-(--font-color)">
                                 Hasil Verifikasi
                             </Label>
-                            <div className="mt-1 grid grid-cols-2 gap-3">
+                            <div className="mt-1 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                                 <button
                                     type="button"
                                     onClick={() =>
                                         verifyForm.setData('action', 'approve')
                                     }
                                     className={cn(
-                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-3.5 text-center transition-all duration-200',
+                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-2.5 text-center transition-all duration-200',
                                         verifyForm.data.action === 'approve'
                                             ? 'border-emerald-600 bg-emerald-50/50 text-emerald-800'
                                             : 'border-stone-200 text-stone-600 hover:border-stone-300',
                                     )}
                                 >
-                                    <CheckCircle className="mb-1 size-6 text-emerald-600" />
-                                    <span className="t-size3 font-bold">
+                                    <CheckCircle className="mb-1 size-5.5 text-emerald-600" />
+                                    <span className="t-size2 font-bold">
                                         Setujui (Verify)
                                     </span>
-                                    <span className="t-size1 mt-0.5 text-stone-500">
+                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
                                         Berkas lengkap & valid
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        verifyForm.setData('action', 'needs_correction')
+                                    }
+                                    className={cn(
+                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-2.5 text-center transition-all duration-200',
+                                        verifyForm.data.action === 'needs_correction'
+                                            ? 'border-orange-600 bg-orange-50/50 text-orange-800'
+                                            : 'border-stone-200 text-stone-600 hover:border-stone-300',
+                                    )}
+                                >
+                                    <AlertCircle className="mb-1 size-5.5 text-orange-600" />
+                                    <span className="t-size2 font-bold">
+                                        Perbaikan
+                                    </span>
+                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
+                                        Perlu direvisi pemohon
                                     </span>
                                 </button>
                                 <button
@@ -676,17 +706,17 @@ export default function SubmissionsShow({
                                         verifyForm.setData('action', 'reject')
                                     }
                                     className={cn(
-                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-3.5 text-center transition-all duration-200',
+                                        'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 p-2.5 text-center transition-all duration-200',
                                         verifyForm.data.action === 'reject'
                                             ? 'border-red-600 bg-red-50/50 text-red-800'
                                             : 'border-stone-200 text-stone-600 hover:border-stone-300',
                                     )}
                                 >
-                                    <Ban className="mb-1 size-6 text-red-600" />
-                                    <span className="t-size3 font-bold">
+                                    <Ban className="mb-1 size-5.5 text-red-600" />
+                                    <span className="t-size2 font-bold">
                                         Tolak (Reject)
                                     </span>
-                                    <span className="t-size1 mt-0.5 text-stone-500">
+                                    <span className="text-[10px] mt-0.5 text-stone-500 leading-tight">
                                         Berkas tidak lengkap
                                     </span>
                                 </button>
@@ -701,7 +731,8 @@ export default function SubmissionsShow({
                                 className="t-size3 font-semibold text-(--font-color)"
                             >
                                 Catatan Verifikasi{' '}
-                                {verifyForm.data.action === 'reject' && (
+                                {(verifyForm.data.action === 'reject' ||
+                                    verifyForm.data.action === 'needs_correction') && (
                                     <span className="text-red-500">*</span>
                                 )}
                             </Label>
@@ -714,9 +745,14 @@ export default function SubmissionsShow({
                                 placeholder={
                                     verifyForm.data.action === 'reject'
                                         ? 'Masukkan alasan penolakan secara detail...'
-                                        : 'Masukkan catatan internal jika diperlukan...'
+                                        : verifyForm.data.action === 'needs_correction'
+                                          ? 'Masukkan rincian berkas yang perlu diperbaiki oleh pemohon...'
+                                          : 'Masukkan catatan internal jika diperlukan...'
                                 }
-                                required={verifyForm.data.action === 'reject'}
+                                required={
+                                    verifyForm.data.action === 'reject' ||
+                                    verifyForm.data.action === 'needs_correction'
+                                }
                                 rows={4}
                                 className="t-size3"
                             />
@@ -744,7 +780,9 @@ export default function SubmissionsShow({
                                     't-size3 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none',
                                     verifyForm.data.action === 'approve'
                                         ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                        : 'bg-red-600 text-white hover:bg-red-700',
+                                        : verifyForm.data.action === 'needs_correction'
+                                          ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                          : 'bg-red-600 text-white hover:bg-red-700',
                                 )}
                             >
                                 Proses Verifikasi

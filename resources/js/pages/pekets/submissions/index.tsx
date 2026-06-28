@@ -35,7 +35,8 @@ interface Submission {
         | 'processing'
         | 'approved'
         | 'completed'
-        | 'cancelled';
+        | 'cancelled'
+        | 'needs_correction';
     source: 'offline' | 'mobile' | 'website';
     notes?: string;
     created_at: string;
@@ -168,6 +169,8 @@ export default function SubmissionsIndex({
         switch (status) {
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800';
+            case 'needs_correction':
+                return 'bg-orange-100 text-orange-850 border border-orange-200';
             case 'verified':
                 return 'bg-blue-100 text-blue-800';
             case 'rejected':
@@ -189,6 +192,8 @@ export default function SubmissionsIndex({
         switch (status) {
             case 'pending':
                 return 'Pending';
+            case 'needs_correction':
+                return 'Perlu Perbaikan';
             case 'verified':
                 return 'Terverifikasi';
             case 'rejected':
@@ -251,6 +256,9 @@ export default function SubmissionsIndex({
                                     </SelectItem>
                                     <SelectItem value="pending">
                                         Pending
+                                    </SelectItem>
+                                    <SelectItem value="needs_correction">
+                                        Perlu Perbaikan
                                     </SelectItem>
                                     <SelectItem value="verified">
                                         Terverifikasi
@@ -515,8 +523,8 @@ export default function SubmissionsIndex({
                                                         {can.includes(
                                                             'u-submissions',
                                                         ) &&
-                                                            submission.status ===
-                                                                'pending' && (
+                                                            (submission.status === 'pending' ||
+                                                                submission.status === 'needs_correction') && (
                                                                 <Link
                                                                     href={route(
                                                                         'submissions.edit',
