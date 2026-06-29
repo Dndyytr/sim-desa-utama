@@ -169,7 +169,7 @@ export default function SubmissionsCreate({
             <div className="flex h-full flex-col gap-2 px-2 py-2 bp360:px-2.25 bp400:px-2.5 md:px-3 md:py-2.25 lg:px-3.5 lg:py-2.5 xl:px-4 xl:py-3 2xl:px-4.5 2xl:py-3.5">
                 {/* Manual Breadcrumb */}
                 <div className="t-size2 font-medium text-stone-500">
-                    Input Pengajuan Offline &gt; Tambah Pengajuan Baru
+                    Kelola Pengajuan & Layanan &gt; Tambah Pengajuan Baru
                 </div>
 
                 <form
@@ -422,7 +422,7 @@ export default function SubmissionsCreate({
 SubmissionsCreate.layout = {
     breadcrumbs: [
         {
-            title: 'Input Pengajuan Offline',
+            title: 'Kelola Pengajuan & Layanan',
             href: index(),
         },
         {
