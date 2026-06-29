@@ -213,7 +213,7 @@ export default function SubmissionsIndex({
 
     return (
         <>
-            <Head title="Input Pengajuan Offline" />
+            <Head title="Kelola Pengajuan & Layanan" />
 
             <div className="flex flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp400:gap-2.5 bp400:px-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
                 {/* Search Bar */}
@@ -592,7 +592,7 @@ export default function SubmissionsIndex({
 SubmissionsIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Input Pengajuan Offline',
+            title: 'Kelola Pengajuan & Layanan',
             href: index(),
         },
     ],

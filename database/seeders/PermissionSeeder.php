@@ -61,6 +61,12 @@ class PermissionSeeder extends Seeder
         ['name' => 'c-submissions', 'guard_name' => 'web', 'feature' => 'submission', 'title' => 'Create'],
         ['name' => 'u-submissions', 'guard_name' => 'web', 'feature' => 'submission', 'title' => 'Update'],
         ['name' => 'd-submissions', 'guard_name' => 'web', 'feature' => 'submission', 'title' => 'Delete'],
+
+        // Services
+        ['name' => 'r-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Read'],
+        ['name' => 'c-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Create'],
+        ['name' => 'u-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Update'],
+        ['name' => 'd-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Delete'],
     ];
 
     /**
