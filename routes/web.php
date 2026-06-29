@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Pekets\SubmissionController;
 use App\Http\Controllers\Sekdes\FamilyController;
 use App\Http\Controllers\Sekdes\ResidentController;
+use App\Http\Controllers\Sekdes\ServiceController;
 use App\Http\Controllers\Sekdes\TypeServiceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('residents', ResidentController::class);
         Route::post('familys/bulk-delete', [FamilyController::class, 'bulkDelete'])->name('familys.bulk-delete');
         Route::resource('familys', FamilyController::class);
+        Route::patch('services/{service}/disposition', [ServiceController::class, 'disposition'])->name('services.disposition');
+        Route::resource('services', ServiceController::class);
     });
 
     // Pekets routes
