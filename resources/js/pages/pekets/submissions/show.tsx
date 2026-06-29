@@ -202,7 +202,7 @@ export default function SubmissionsShow({
             <div className="flex h-full flex-col gap-2 px-2 py-2 bp360:gap-2.25 bp360:px-2.25 bp360:py-2.25 bp400:gap-2.5 bp400:px-2.5 bp400:py-2.5 md:gap-2.75 md:px-3 md:py-2.25 lg:gap-3 lg:px-3.5 lg:py-2.5 xl:gap-3.5 xl:px-4 xl:py-3 2xl:gap-4 2xl:px-4.5 2xl:py-3.5">
                 {/* Manual Breadcrumb */}
                 <div className="t-size2 font-medium text-stone-500">
-                    Input Pengajuan Offline &gt; Detail Pengajuan &gt;{' '}
+                    Kelola Pengajuan & Layanan &gt; Detail Pengajuan &gt;{' '}
                     {submission.submission_number}
                 </div>
 
@@ -809,7 +809,7 @@ export default function SubmissionsShow({
 SubmissionsShow.layout = {
     breadcrumbs: [
         {
-            title: 'Input Pengajuan Offline',
+            title: 'Kelola Pengajuan & Layanan',
             href: index(),
         },
         {
