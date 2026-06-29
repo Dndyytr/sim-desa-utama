@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
 use App\Http\Controllers\Pekets\SubmissionController;
 use App\Http\Controllers\Sekdes\FamilyController;
 use App\Http\Controllers\Sekdes\ResidentController;
@@ -57,6 +58,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('submissions/{submission}/verify', [SubmissionController::class, 'verify'])->name('submissions.verify');
         Route::post('submissions/bulk-delete', [SubmissionController::class, 'bulkDelete'])->name('submissions.bulk-delete');
         Route::resource('submissions', SubmissionController::class);
+    });
+
+    // Kadangs routes
+    Route::prefix('kadangs')->name('kadangs.')->group(function () {
+        Route::patch('services/{service}/process', [KadangsServiceController::class, 'process'])->name('services.process');
+        Route::resource('services', KadangsServiceController::class);
     });
 });
 
