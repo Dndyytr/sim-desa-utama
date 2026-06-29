@@ -19,6 +19,8 @@ class ServiceTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutVite();
+
         Permission::firstOrCreate(['name' => 'r-services', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'u-services', 'guard_name' => 'web']);
     }
