@@ -1,4 +1,4 @@
-import { Head, Link, router,useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
