@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
@@ -11,19 +11,9 @@ import {
     Tag,
     User as UserIcon,
 } from 'lucide-react';
-import { useState } from 'react';
 
 import InputError from '@/components/input-error';
 import { Button, buttonVariants } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -48,6 +38,8 @@ interface Service {
     submission_id: number;
     status: 'processing' | 'approved' | 'completed';
     notes: string | null;
+    result: string | null;
+    draft_content: string | null;
     created_at: string;
     updated_at: string;
     submission?: {
@@ -88,20 +80,37 @@ interface Service {
 }
 
 export default function ServicesShow({ service }: { service: Service }) {
-    const [isProcessOpen, setIsProcessOpen] = useState(false);
-
     const currentAssignedTo = service.assigned_to;
+    const hasStarted = service.submission?.service_logs?.some(
+        (log) => log.activity === 'Memulai proses layanan',
+    );
 
     const processForm = useForm({
-        notes: '',
+        result: service.result || '',
+        notes: service.notes || '',
+        draft_content: service.draft_content || '',
     });
+
+    const handleStartProcess = () => {
+        router.patch(
+            route('kadangs.services.start-process', service.id),
+            {},
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleSaveProgress = (e: React.FormEvent) => {
+        e.preventDefault();
+        processForm.patch(route('kadangs.services.save-progress', service.id), {
+            preserveScroll: true,
+        });
+    };
 
     const handleProcessSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         processForm.patch(route('kadangs.services.process', service.id), {
-            onSuccess: () => {
-                setIsProcessOpen(false);
-            },
             preserveScroll: true,
         });
     };
@@ -258,6 +267,228 @@ export default function ServicesShow({ service }: { service: Service }) {
                                 )}
                             </div>
                         </div>
+
+                        {/* Panel Pemrosesan Layanan */}
+                        {service.status === 'processing' && (
+                            <div className="flex flex-col gap-2 rounded-lg border border-indigo-100 bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
+                                <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">
+                                    <div className="grid size-8.25 shrink-0 place-items-center rounded-full bg-indigo-50 text-indigo-600 bp360:size-8.5 bp400:size-8.75 md:size-9.25 lg:size-9.75 xl:size-10.25 2xl:size-10.75">
+                                        <CheckCircle className="size-4 bp360:size-4.25 bp400:size-4.5 md:size-4.75 lg:size-5.25 xl:size-5.75 2xl:size-6.25" />
+                                    </div>
+                                    <h2 className="t-size3 font-semibold text-indigo-900">
+                                        Proses Layanan Administrasi
+                                    </h2>
+                                </div>
+
+                                {!hasStarted ? (
+                                    <div className="mt-2 flex flex-col gap-3 rounded-lg border border-indigo-100/50 bg-indigo-50/50 p-4">
+                                        <p className="t-size2 font-medium text-indigo-950">
+                                            Layanan ini belum mulai diproses.
+                                            Silakan klik tombol di bawah untuk
+                                            menandai bahwa Anda telah memulai
+                                            proses pemeriksaan administrasi.
+                                        </p>
+                                        <div>
+                                            <Button
+                                                type="button"
+                                                onClick={handleStartProcess}
+                                                className="t-size3 bg-indigo-600 font-bold text-white transition-all hover:bg-indigo-700"
+                                            >
+                                                Mulai Proses Layanan
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <form
+                                        onSubmit={handleProcessSubmit}
+                                        className="mt-2 flex flex-col gap-4"
+                                    >
+                                        <div className="flex flex-col gap-1.5">
+                                            <Label
+                                                htmlFor="result"
+                                                className="t-size3 font-semibold text-stone-700"
+                                            >
+                                                Hasil Pemeriksaan{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Textarea
+                                                id="result"
+                                                value={processForm.data.result}
+                                                onChange={(e) =>
+                                                    processForm.setData(
+                                                        'result',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Contoh: Berkas persyaratan lengkap dan data domisili pemohon sesuai dengan basis data kependudukan."
+                                                rows={3}
+                                                className="t-size3 border-stone-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <InputError
+                                                message={
+                                                    processForm.errors.result
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <Label
+                                                htmlFor="notes"
+                                                className="t-size3 font-semibold text-stone-700"
+                                            >
+                                                Catatan Pemrosesan / Rekomendasi{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <Textarea
+                                                id="notes"
+                                                value={processForm.data.notes}
+                                                onChange={(e) =>
+                                                    processForm.setData(
+                                                        'notes',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan instruksi khusus atau rekomendasi hasil pemeriksaan..."
+                                                rows={3}
+                                                className="t-size3 border-stone-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <InputError
+                                                message={
+                                                    processForm.errors.notes
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <Label
+                                                htmlFor="draft_content"
+                                                className="t-size3 font-semibold text-stone-700"
+                                            >
+                                                Draft Surat Pelayanan{' '}
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                            </Label>
+                                            <div className="mb-1 rounded-md border border-stone-200 bg-stone-50 p-2">
+                                                <span className="t-size1 block font-bold tracking-wider text-stone-500 uppercase">
+                                                    Template Otomatis
+                                                </span>
+                                                <span className="t-size2 mt-1 block text-stone-600">
+                                                    Salin teks di bawah atau
+                                                    buat surat sesuai format
+                                                    jenis layanan ini:
+                                                </span>
+                                                <pre className="t-size1 mt-2 max-h-32 overflow-auto rounded border border-stone-200 bg-white p-2 font-mono whitespace-pre-wrap select-all">
+                                                    {`SURAT KETERANGAN ${service.submission?.type_service?.service_name.toUpperCase()}
+Nomor: [Nomor Surat Otomatis]
+
+Yang bertanda tangan di bawah ini menerangkan bahwa:
+Nama: ${service.submission?.resident?.name}
+NIK: ${service.submission?.resident?.nik}
+Alamat: ${service.submission?.resident?.address}
+
+Adalah benar penduduk Desa Utama yang memiliki keperluan/keterangan:
+${service.submission?.subject}
+
+Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.`}
+                                                </pre>
+                                            </div>
+                                            <Textarea
+                                                id="draft_content"
+                                                value={
+                                                    processForm.data
+                                                        .draft_content
+                                                }
+                                                onChange={(e) =>
+                                                    processForm.setData(
+                                                        'draft_content',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Tempel template di atas dan sesuaikan isinya..."
+                                                rows={8}
+                                                className="t-size3 border-stone-200 font-mono focus:border-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <InputError
+                                                message={
+                                                    processForm.errors
+                                                        .draft_content
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mt-2 flex items-center justify-end gap-3 border-t pt-3">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={handleSaveProgress}
+                                                disabled={
+                                                    processForm.processing
+                                                }
+                                                className="t-size3 border-stone-300 text-stone-700 hover:bg-stone-50"
+                                            >
+                                                Simpan Progres
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    processForm.processing
+                                                }
+                                                className="t-size3 bg-emerald-600 font-bold text-white transition-all hover:bg-emerald-700"
+                                            >
+                                                Kirim untuk Persetujuan Kades
+                                            </Button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        )}
+
+                        {service.status !== 'processing' && (
+                            <div className="flex flex-col gap-2 rounded-lg border border-emerald-100 bg-emerald-50/10 bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
+                                <div className="inline-flex items-center gap-2 md:gap-2.5 lg:gap-2.75 xl:gap-3">
+                                    <div className="grid size-8.25 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-800 bp360:size-8.5 bp400:size-8.75 md:size-9.25 lg:size-9.75 xl:size-10.25 2xl:size-10.75">
+                                        <CheckCircle className="size-4 bp360:size-4.25 bp400:size-4.5 md:size-4.75 lg:size-5.25 xl:size-5.75 2xl:size-6.25" />
+                                    </div>
+                                    <h2 className="t-size3 font-semibold text-emerald-900">
+                                        Hasil Pemrosesan Layanan
+                                    </h2>
+                                </div>
+
+                                <div className="mt-2 flex flex-col gap-3">
+                                    <div className="flex flex-col border-b pb-2">
+                                        <span className="t-size1 font-semibold text-stone-400">
+                                            HASIL PEMERIKSAAN
+                                        </span>
+                                        <span className="t-size2 mt-1 font-medium whitespace-pre-wrap text-stone-800">
+                                            {service.result || '-'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-col border-b pb-2">
+                                        <span className="t-size1 font-semibold text-stone-400">
+                                            CATATAN PROSES
+                                        </span>
+                                        <span className="t-size2 mt-1 font-medium whitespace-pre-wrap text-stone-800">
+                                            {service.notes || '-'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-col">
+                                        <span className="t-size1 font-semibold text-stone-400">
+                                            DRAFT SURAT
+                                        </span>
+                                        <pre className="t-size2 mt-1.5 max-h-96 overflow-auto rounded border border-stone-200 bg-stone-50 p-3 font-mono whitespace-pre-wrap">
+                                            {service.draft_content || '-'}
+                                        </pre>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Attachments Card */}
                         <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-[0_10px_20px_0px_rgba(0,0,0,0.2)] bp360:gap-2.25 bp360:p-3 bp400:gap-2.5 bp400:p-3.25 sm:gap-2.75 md:gap-3 md:p-3.5 lg:p-4 xl:p-4.5 2xl:p-5">
@@ -514,86 +745,8 @@ export default function ServicesShow({ service }: { service: Service }) {
                         <ArrowLeft className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4 lg:size-4.25 xl:size-4.5 2xl:size-4.75" />
                         Kembali
                     </Link>
-
-                    {service.status === 'processing' && (
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                onClick={() => setIsProcessOpen(true)}
-                                className="t-size3 bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
-                            >
-                                <CheckCircle className="mr-1.5 size-3.5" />
-                                Proses Layanan
-                            </Button>
-                        </div>
-                    )}
                 </div>
             </div>
-
-            {/* Process Dialog */}
-            <Dialog open={isProcessOpen} onOpenChange={setIsProcessOpen}>
-                <DialogContent className="sm:max-w-120">
-                    <DialogHeader className="t-size2">
-                        <DialogTitle className="text-[1.3em] font-bold text-(--primary)">
-                            Proses Layanan
-                        </DialogTitle>
-                        <DialogDescription>
-                            Selesaikan pemrosesan berkas layanan ini dan
-                            teruskan ke Kepala Desa untuk mendapat persetujuan
-                            akhir.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form
-                        onSubmit={handleProcessSubmit}
-                        className="mt-2 flex flex-col gap-4"
-                    >
-                        {/* Textarea for Notes */}
-                        <div className="flex flex-col gap-1.5">
-                            <Label
-                                htmlFor="process_notes"
-                                className="t-size3 font-semibold text-(--font-color)"
-                            >
-                                Catatan Hasil Pemrosesan
-                            </Label>
-                            <Textarea
-                                id="process_notes"
-                                value={processForm.data.notes}
-                                onChange={(e) =>
-                                    processForm.setData('notes', e.target.value)
-                                }
-                                placeholder="Masukkan catatan hasil pengerjaan layanan..."
-                                rows={4}
-                                className="t-size3"
-                            />
-                            <InputError message={processForm.errors.notes} />
-                        </div>
-
-                        <DialogFooter className="mt-3">
-                            <DialogClose asChild>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() => {
-                                        setIsProcessOpen(false);
-                                        processForm.reset();
-                                    }}
-                                    className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
-                                >
-                                    Batal
-                                </Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                disabled={processForm.processing}
-                                className="t-size3 bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
-                            >
-                                Kirim ke Kepala Desa
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
         </>
     );
 }
