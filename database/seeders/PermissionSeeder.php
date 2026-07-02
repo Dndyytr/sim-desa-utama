@@ -62,11 +62,23 @@ class PermissionSeeder extends Seeder
         ['name' => 'u-submissions', 'guard_name' => 'web', 'feature' => 'submission', 'title' => 'Update'],
         ['name' => 'd-submissions', 'guard_name' => 'web', 'feature' => 'submission', 'title' => 'Delete'],
 
-        // Services
+        // Services (Disposisi Layanan - Sekdes)
         ['name' => 'r-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Read'],
         ['name' => 'c-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Create'],
         ['name' => 'u-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Update'],
         ['name' => 'd-services', 'guard_name' => 'web', 'feature' => 'service', 'title' => 'Delete'],
+
+        // Kadang Services (Kelola Layanan - Kasi Bidang)
+        ['name' => 'r-kadang-services', 'guard_name' => 'web', 'feature' => 'kadang-service', 'title' => 'Read'],
+        ['name' => 'c-kadang-services', 'guard_name' => 'web', 'feature' => 'kadang-service', 'title' => 'Create'],
+        ['name' => 'u-kadang-services', 'guard_name' => 'web', 'feature' => 'kadang-service', 'title' => 'Update'],
+        ['name' => 'd-kadang-services', 'guard_name' => 'web', 'feature' => 'kadang-service', 'title' => 'Delete'],
+
+        // Kades Services (Persetujuan Akhir - Kepala Desa)
+        ['name' => 'r-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Read'],
+        ['name' => 'c-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Create'],
+        ['name' => 'u-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Update'],
+        ['name' => 'd-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Delete'],
     ];
 
     /**

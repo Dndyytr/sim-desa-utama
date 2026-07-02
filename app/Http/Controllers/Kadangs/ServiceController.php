@@ -21,8 +21,8 @@ class ServiceController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:r-services', only: ['index', 'show']),
-            new Middleware('permission:u-services', only: ['process', 'startProcess', 'saveProgress']),
+            new Middleware('permission:r-kadang-services', only: ['index', 'show']),
+            new Middleware('permission:u-kadang-services', only: ['process', 'startProcess', 'saveProgress']),
         ];
     }
 

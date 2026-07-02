@@ -21,8 +21,8 @@ class ServiceTest extends TestCase
 
         $this->withoutVite();
 
-        Permission::firstOrCreate(['name' => 'r-services', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'u-services', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'r-kadang-services', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'u-kadang-services', 'guard_name' => 'web']);
     }
 
     private function signIn(array $permissions = []): User
@@ -108,7 +108,7 @@ class ServiceTest extends TestCase
 
     public function test_authorized_users_can_view_assigned_services_only()
     {
-        $currentUser = $this->signIn(['r-services']);
+        $currentUser = $this->signIn(['r-kadang-services']);
         $anotherUser = User::factory()->create();
 
         $assignedService = $this->createService($currentUser);
@@ -123,7 +123,7 @@ class ServiceTest extends TestCase
 
     public function test_can_show_assigned_service_details()
     {
-        $currentUser = $this->signIn(['r-services']);
+        $currentUser = $this->signIn(['r-kadang-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->get(route('kadangs.services.show', $service->id));
@@ -132,7 +132,7 @@ class ServiceTest extends TestCase
 
     public function test_cannot_show_service_details_assigned_to_someone_else()
     {
-        $this->signIn(['r-services']);
+        $this->signIn(['r-kadang-services']);
         $anotherUser = User::factory()->create();
         $service = $this->createService($anotherUser);
 
@@ -142,7 +142,7 @@ class ServiceTest extends TestCase
 
     public function test_can_start_processing_service()
     {
-        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $currentUser = $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->patch(route('kadangs.services.start-process', $service->id));
@@ -157,7 +157,7 @@ class ServiceTest extends TestCase
 
     public function test_can_save_processing_progress()
     {
-        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $currentUser = $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->patch(route('kadangs.services.save-progress', $service->id), [
@@ -184,7 +184,7 @@ class ServiceTest extends TestCase
 
     public function test_can_process_assigned_service_successfully()
     {
-        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $currentUser = $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->patch(route('kadangs.services.process', $service->id), [
@@ -212,7 +212,7 @@ class ServiceTest extends TestCase
 
     public function test_cannot_process_service_without_required_fields()
     {
-        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $currentUser = $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->patch(route('kadangs.services.process', $service->id), [
@@ -230,7 +230,7 @@ class ServiceTest extends TestCase
 
     public function test_cannot_process_service_assigned_to_someone_else()
     {
-        $this->signIn(['r-services', 'u-services']);
+        $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $anotherUser = User::factory()->create();
         $service = $this->createService($anotherUser);
 
@@ -249,7 +249,7 @@ class ServiceTest extends TestCase
 
     public function test_cannot_process_non_processing_service()
     {
-        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $currentUser = $this->signIn(['r-kadang-services', 'u-kadang-services']);
         $service = $this->createService($currentUser);
         $service->status = 'approved';
         $service->save();
