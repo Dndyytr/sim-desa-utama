@@ -140,27 +140,91 @@ class ServiceTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_can_start_processing_service()
+    {
+        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $service = $this->createService($currentUser);
+
+        $response = $this->patch(route('kadangs.services.start-process', $service->id));
+
+        $response->assertRedirect(route('kadangs.services.show', $service->id));
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $service->submission_id,
+            'stage' => 'Processing',
+            'activity' => 'Memulai proses layanan',
+        ]);
+    }
+
+    public function test_can_save_processing_progress()
+    {
+        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $service = $this->createService($currentUser);
+
+        $response = $this->patch(route('kadangs.services.save-progress', $service->id), [
+            'result' => 'Hasil pemeriksaan progres',
+            'notes' => 'Progres catatan',
+            'draft_content' => 'Progres draft surat',
+        ]);
+
+        $response->assertRedirect(route('kadangs.services.show', $service->id));
+        $this->assertDatabaseHas('services', [
+            'id' => $service->id,
+            'result' => 'Hasil pemeriksaan progres',
+            'notes' => 'Progres catatan',
+            'draft_content' => 'Progres draft surat',
+            'status' => 'processing',
+        ]);
+
+        $this->assertDatabaseHas('service_logs', [
+            'submission_id' => $service->submission_id,
+            'stage' => 'Processing',
+            'activity' => 'Menyimpan progres layanan',
+        ]);
+    }
+
     public function test_can_process_assigned_service_successfully()
     {
         $currentUser = $this->signIn(['r-services', 'u-services']);
         $service = $this->createService($currentUser);
 
         $response = $this->patch(route('kadangs.services.process', $service->id), [
-            'notes' => 'Berkas lengkap dan sesuai.',
+            'result' => 'Berkas lengkap dan sesuai.',
+            'notes' => 'Catatan hasil pengerjaan.',
+            'draft_content' => 'Isi Draft Surat Resmi',
         ]);
 
         $response->assertRedirect(route('kadangs.services.show', $service->id));
         $this->assertDatabaseHas('services', [
             'id' => $service->id,
             'status' => 'approved',
-            'notes' => 'Berkas lengkap dan sesuai.',
+            'result' => 'Berkas lengkap dan sesuai.',
+            'notes' => 'Catatan hasil pengerjaan.',
+            'draft_content' => 'Isi Draft Surat Resmi',
         ]);
 
         $this->assertDatabaseHas('service_logs', [
             'submission_id' => $service->submission_id,
             'stage' => 'Processing',
             'activity' => 'Layanan selesai diproses dan diteruskan untuk persetujuan akhir',
-            'notes' => 'Berkas lengkap dan sesuai.',
+            'notes' => 'Catatan hasil pengerjaan.',
+        ]);
+    }
+
+    public function test_cannot_process_service_without_required_fields()
+    {
+        $currentUser = $this->signIn(['r-services', 'u-services']);
+        $service = $this->createService($currentUser);
+
+        $response = $this->patch(route('kadangs.services.process', $service->id), [
+            'result' => '',
+            'notes' => '',
+            'draft_content' => '',
+        ]);
+
+        $response->assertSessionHasErrors(['result', 'notes', 'draft_content']);
+        $this->assertDatabaseHas('services', [
+            'id' => $service->id,
+            'status' => 'processing',
         ]);
     }
 
@@ -171,7 +235,9 @@ class ServiceTest extends TestCase
         $service = $this->createService($anotherUser);
 
         $response = $this->patch(route('kadangs.services.process', $service->id), [
+            'result' => 'Hasil',
             'notes' => 'Catatan',
+            'draft_content' => 'Draft',
         ]);
 
         $response->assertForbidden();
@@ -189,7 +255,9 @@ class ServiceTest extends TestCase
         $service->save();
 
         $response = $this->patch(route('kadangs.services.process', $service->id), [
+            'result' => 'Hasil',
             'notes' => 'Catatan',
+            'draft_content' => 'Draft',
         ]);
 
         $response->assertRedirect();

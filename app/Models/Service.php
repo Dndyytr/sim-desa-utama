@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'status',
     'assigned_to',
     'notes',
+    'result',
+    'draft_content',
 ])]
 class Service extends Model
 {

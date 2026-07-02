@@ -22,7 +22,7 @@ class ServiceController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:r-services', only: ['index', 'show']),
-            new Middleware('permission:u-services', only: ['process']),
+            new Middleware('permission:u-services', only: ['process', 'startProcess', 'saveProgress']),
         ];
     }
 
@@ -110,7 +110,102 @@ class ServiceController extends Controller implements HasMiddleware
     }
 
     /**
-     * Process service.
+     * Start processing service.
+     */
+    public function startProcess(int $id): RedirectResponse
+    {
+        $service = Service::findOrFail($id);
+
+        if ($service->assigned_to !== Auth::id()) {
+            abort(403, 'Anda tidak ditugaskan untuk memproses layanan ini.');
+        }
+
+        if ($service->status !== 'processing') {
+            return redirect()->back()->with('error', 'Layanan tidak dalam status diproses.');
+        }
+
+        // Check if already started processing in logs to avoid duplicates
+        $alreadyStarted = ServiceLog::where('submission_id', $service->submission_id)
+            ->where('stage', 'Processing')
+            ->where('activity', 'Memulai proses layanan')
+            ->exists();
+
+        if (! $alreadyStarted) {
+            try {
+                DB::beginTransaction();
+
+                $serviceLog = new ServiceLog;
+                $serviceLog->submission_id = $service->submission_id;
+                $serviceLog->stage = 'Processing';
+                $serviceLog->activity = 'Memulai proses layanan';
+                $serviceLog->performed_by = auth()->id();
+                $serviceLog->save();
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Failed to start processing service: '.$e->getMessage());
+
+                return redirect()->back()->with('error', 'Gagal memulai proses layanan.');
+            }
+        }
+
+        return redirect()->route('kadangs.services.show', $service->id)->with('success', 'Proses layanan dimulai.');
+    }
+
+    /**
+     * Save service processing progress.
+     */
+    public function saveProgress(Request $request, int $id): RedirectResponse
+    {
+        $service = Service::findOrFail($id);
+
+        if ($service->assigned_to !== Auth::id()) {
+            abort(403, 'Anda tidak ditugaskan untuk memproses layanan ini.');
+        }
+
+        if ($service->status !== 'processing') {
+            return redirect()->back()->with('error', 'Layanan tidak dalam status diproses.');
+        }
+
+        $validated = $request->validate([
+            'result' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
+            'draft_content' => 'nullable|string',
+        ], [
+            'notes.max' => 'Catatan proses maksimal 1000 karakter.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $service->result = $validated['result'] ?? null;
+            $service->notes = $validated['notes'] ?? null;
+            $service->draft_content = $validated['draft_content'] ?? null;
+            $service->save();
+
+            // Create service log
+            $serviceLog = new ServiceLog;
+            $serviceLog->submission_id = $service->submission_id;
+            $serviceLog->stage = 'Processing';
+            $serviceLog->activity = 'Menyimpan progres layanan';
+            $serviceLog->performed_by = auth()->id();
+            $serviceLog->notes = $validated['notes'] ?? null;
+            $serviceLog->save();
+
+            DB::commit();
+
+            return redirect()->route('kadangs.services.show', $service->id)->with('success', 'Progres layanan berhasil disimpan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to save service progress: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Gagal menyimpan progres layanan.');
+        }
+    }
+
+    /**
+     * Process service (Send for approval).
      */
     public function process(Request $request, int $id): RedirectResponse
     {
@@ -125,16 +220,23 @@ class ServiceController extends Controller implements HasMiddleware
         }
 
         $validated = $request->validate([
-            'notes' => 'nullable|string|max:1000',
+            'result' => 'required|string',
+            'notes' => 'required|string|max:1000',
+            'draft_content' => 'required|string',
         ], [
-            'notes.max' => 'Catatan pemrosesan maksimal 1000 karakter.',
+            'result.required' => 'Hasil pemeriksaan wajib diisi.',
+            'notes.required' => 'Catatan proses wajib diisi.',
+            'notes.max' => 'Catatan proses maksimal 1000 karakter.',
+            'draft_content.required' => 'Draft surat belum tersedia.',
         ]);
 
         try {
             DB::beginTransaction();
 
             $service->status = 'approved';
-            $service->notes = $validated['notes'] ?? null;
+            $service->result = $validated['result'];
+            $service->notes = $validated['notes'];
+            $service->draft_content = $validated['draft_content'];
             $service->save();
 
             // Create service log
@@ -143,7 +245,7 @@ class ServiceController extends Controller implements HasMiddleware
             $serviceLog->stage = 'Processing';
             $serviceLog->activity = 'Layanan selesai diproses dan diteruskan untuk persetujuan akhir';
             $serviceLog->performed_by = auth()->id();
-            $serviceLog->notes = $validated['notes'] ?? null;
+            $serviceLog->notes = $validated['notes'];
             $serviceLog->save();
 
             DB::commit();

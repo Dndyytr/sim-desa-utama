@@ -62,6 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Kadangs routes
     Route::prefix('kadangs')->name('kadangs.')->group(function () {
+        Route::patch('services/{service}/start-process', [KadangsServiceController::class, 'startProcess'])->name('services.start-process');
+        Route::patch('services/{service}/save-progress', [KadangsServiceController::class, 'saveProgress'])->name('services.save-progress');
         Route::patch('services/{service}/process', [KadangsServiceController::class, 'process'])->name('services.process');
         Route::resource('services', KadangsServiceController::class);
     });
