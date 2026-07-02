@@ -7,6 +7,7 @@ use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
+use App\Http\Controllers\Kades\ServiceController as KadesServiceController;
 use App\Http\Controllers\Pekets\SubmissionController;
 use App\Http\Controllers\Sekdes\FamilyController;
 use App\Http\Controllers\Sekdes\ResidentController;
@@ -66,6 +67,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('services/{service}/save-progress', [KadangsServiceController::class, 'saveProgress'])->name('services.save-progress');
         Route::patch('services/{service}/process', [KadangsServiceController::class, 'process'])->name('services.process');
         Route::resource('services', KadangsServiceController::class);
+    });
+
+    // Kades routes
+    Route::prefix('kades')->name('kades.')->group(function () {
+        Route::patch('services/{service}/approve', [KadesServiceController::class, 'approve'])->name('services.approve');
+        Route::patch('services/{service}/revise', [KadesServiceController::class, 'revise'])->name('services.revise');
+        Route::patch('services/{service}/reject', [KadesServiceController::class, 'reject'])->name('services.reject');
+        Route::resource('services', KadesServiceController::class);
     });
 });
 
