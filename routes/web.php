@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Kadangs\LetterController as KadangsLetterController;
 use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
 use App\Http\Controllers\Kades\ServiceController as KadesServiceController;
 use App\Http\Controllers\Pekets\SubmissionController;
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('services/{service}/save-progress', [KadangsServiceController::class, 'saveProgress'])->name('services.save-progress');
         Route::patch('services/{service}/process', [KadangsServiceController::class, 'process'])->name('services.process');
         Route::resource('services', KadangsServiceController::class);
+
+        Route::get('letters/{letter}/download', [KadangsLetterController::class, 'download'])->name('letters.download');
+        Route::resource('letters', KadangsLetterController::class);
     });
 
     // Kades routes

@@ -16,6 +16,26 @@ class UserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => 'admin123',
         ],
+        [
+            'name' => 'Sekretaris Desa',
+            'email' => 'sekdes@gmail.com',
+            'password' => 'sekdes123',
+        ],
+        [
+            'name' => 'Petugas Loket',
+            'email' => 'peket@gmail.com',
+            'password' => 'peket123',
+        ],
+        [
+            'name' => 'Kasi Bidang',
+            'email' => 'kadang@gmail.com',
+            'password' => 'kadang123',
+        ],
+        [
+            'name' => 'Kepala Desa',
+            'email' => 'kades@gmail.com',
+            'password' => 'kades123',
+        ],
     ];
 
     /**

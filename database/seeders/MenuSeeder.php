@@ -136,6 +136,16 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id',
         ],
+        [
+            'parent_id' => null,
+            'title' => 'Generate Surat',
+            'url' => 'kadangs.letters.index',
+            'tag' => 'kadangs-letters',
+            'icon' => 'Printer',
+            'permission' => 'kadang-letter',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
     ];
 
     /**
