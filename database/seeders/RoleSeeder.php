@@ -13,6 +13,26 @@ class RoleSeeder extends Seeder
             'guard_name' => 'web',
             'description' => 'Memiliki akses penuh ke semua fitur dan pengaturan dalam sistem.',
         ],
+        [
+            'name' => 'sekdes',
+            'guard_name' => 'web',
+            'description' => 'Memiliki akses sebagai sekretaris desa.',
+        ],
+        [
+            'name' => 'peket',
+            'guard_name' => 'web',
+            'description' => 'Memiliki akses sebagai petugas loket.',
+        ],
+        [
+            'name' => 'kadang',
+            'guard_name' => 'web',
+            'description' => 'Memiliki akses sebagai kasi bidang.',
+        ],
+        [
+            'name' => 'kades',
+            'guard_name' => 'web',
+            'description' => 'Memiliki akses sebagai kepala desa.',
+        ],
     ];
 
     /**

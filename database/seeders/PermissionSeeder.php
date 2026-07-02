@@ -79,6 +79,12 @@ class PermissionSeeder extends Seeder
         ['name' => 'c-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Create'],
         ['name' => 'u-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Update'],
         ['name' => 'd-kades-services', 'guard_name' => 'web', 'feature' => 'kades-service', 'title' => 'Delete'],
+
+        // Kadang Letters (Generate Surat - Kasi Bidang)
+        ['name' => 'r-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Read'],
+        ['name' => 'c-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Create'],
+        ['name' => 'u-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Update'],
+        ['name' => 'd-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Delete'],
     ];
 
     /**
