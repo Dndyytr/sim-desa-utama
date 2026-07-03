@@ -146,6 +146,16 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id',
         ],
+        [
+            'parent_id' => null,
+            'title' => 'Arsip Layanan',
+            'url' => 'kadangs.archives.index',
+            'tag' => 'kadangs-archives',
+            'icon' => 'Archive',
+            'permission' => 'kadang-archive',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
     ];
 
     /**

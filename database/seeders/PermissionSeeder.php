@@ -85,6 +85,12 @@ class PermissionSeeder extends Seeder
         ['name' => 'c-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Create'],
         ['name' => 'u-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Update'],
         ['name' => 'd-kadang-letters', 'guard_name' => 'web', 'feature' => 'kadang-letter', 'title' => 'Delete'],
+
+        // Kadang Archives (Kelola Arsip Layanan - Kasi Bidang)
+        ['name' => 'r-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Read'],
+        ['name' => 'c-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Create'],
+        ['name' => 'u-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Update'],
+        ['name' => 'd-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Delete'],
     ];
 
     /**
