@@ -41,4 +41,12 @@ class Service extends Model
     {
         return $this->hasOne(Letter::class, 'service_id');
     }
+
+    /**
+     * Get the archive record for this service.
+     */
+    public function archive(): HasOne
+    {
+        return $this->hasOne(ServiceArchive::class, 'service_id');
+    }
 }

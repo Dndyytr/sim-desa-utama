@@ -158,7 +158,7 @@ class LetterTest extends TestCase
         $this->assertDatabaseHas('service_logs', [
             'submission_id' => $service->submission_id,
             'stage' => 'Finished',
-            'activity' => 'Surat resmi diterbitkan (Generate Surat)',
+            'activity' => 'Surat resmi diterbitkan & Layanan Diarsipkan',
         ]);
     }
 

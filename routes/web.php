@@ -7,6 +7,7 @@ use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kadangs\LetterController as KadangsLetterController;
+use App\Http\Controllers\Kadangs\ServiceArchiveController as KadangsServiceArchiveController;
 use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
 use App\Http\Controllers\Kades\ServiceController as KadesServiceController;
 use App\Http\Controllers\Pekets\SubmissionController;
@@ -71,6 +72,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('letters/{letter}/download', [KadangsLetterController::class, 'download'])->name('letters.download');
         Route::resource('letters', KadangsLetterController::class);
+
+        Route::resource('archives', KadangsServiceArchiveController::class)->only(['index', 'show', 'update']);
     });
 
     // Kades routes

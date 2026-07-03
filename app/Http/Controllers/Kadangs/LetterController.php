@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ListingRequest;
 use App\Models\Letter;
 use App\Models\Service;
+use App\Models\ServiceArchive;
 use App\Models\ServiceLog;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -187,13 +188,25 @@ class LetterController extends Controller implements HasMiddleware
             $service->status = 'finished';
             $service->save();
 
+            // Create automatic ServiceArchive record
+            $archiveCounter = ServiceArchive::count() + 1;
+            $archiveNumber = 'ARSIP/'.now()->year.'/'.str_pad($archiveCounter, 3, '0', STR_PAD_LEFT);
+
+            $archive = new ServiceArchive;
+            $archive->archive_number = $archiveNumber;
+            $archive->service_id = $service->id;
+            $archive->status = 'aktif';
+            $archive->archived_at = now();
+            $archive->archived_by = Auth::id();
+            $archive->save();
+
             // Create service log
             $serviceLog = new ServiceLog;
             $serviceLog->submission_id = $service->submission_id;
             $serviceLog->stage = 'Finished';
-            $serviceLog->activity = 'Surat resmi diterbitkan (Generate Surat)';
+            $serviceLog->activity = 'Surat resmi diterbitkan & Layanan Diarsipkan';
             $serviceLog->performed_by = Auth::id();
-            $serviceLog->notes = 'Nomor Surat: '.$letterNumber;
+            $serviceLog->notes = 'Nomor Surat: '.$letterNumber.', Nomor Arsip: '.$archiveNumber;
             $serviceLog->save();
 
             DB::commit();
