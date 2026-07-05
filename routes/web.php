@@ -6,6 +6,7 @@ use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\Kadangs\LetterController as KadangsLetterController;
 use App\Http\Controllers\Kadangs\ServiceArchiveController as KadangsServiceArchiveController;
 use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
@@ -85,6 +86,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('services', KadesServiceController::class);
         Route::get('reports/print', [KadesReportController::class, 'print'])->name('reports.print');
         Route::resource('reports', KadesReportController::class)->only(['index', 'show']);
+    });
+
+    // File Access Routes
+    Route::prefix('files')->name('files.')->group(function () {
+        Route::get('attachments/{attachment}/preview', [FileController::class, 'previewAttachment'])->name('attachments.preview');
+        Route::get('attachments/{attachment}/download', [FileController::class, 'downloadAttachment'])->name('attachments.download');
+        Route::get('letters/{letter}/preview', [FileController::class, 'previewLetter'])->name('letters.preview');
+        Route::get('letters/{letter}/download', [FileController::class, 'downloadLetter'])->name('letters.download');
+        Route::get('letters/{letter}/print', [FileController::class, 'printLetter'])->name('letters.print');
     });
 });
 
