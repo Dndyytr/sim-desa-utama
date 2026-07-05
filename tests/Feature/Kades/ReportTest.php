@@ -196,4 +196,30 @@ class ReportTest extends TestCase
         $response = $this->get(route('kades.reports.index', ['period' => 'invalid_period']));
         $response->assertSessionHasErrors('period');
     }
+
+    public function test_unauthorized_users_cannot_print_reports()
+    {
+        $this->signIn(); // no permissions
+        $response = $this->get(route('kades.reports.print'));
+        $response->assertForbidden();
+    }
+
+    public function test_authorized_users_can_print_reports_and_it_is_logged()
+    {
+        $this->signIn(['r-kades-reports']);
+        $this->createSubmissionWithService('finished');
+
+        $response = $this->get(route('kades.reports.print', [
+            'period' => 'all',
+            'status' => 'finished',
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertDatabaseHas('report_print_logs', [
+            'report_type' => 'Laporan Pelayanan Desa',
+            'period' => 'all',
+        ]);
+    }
 }

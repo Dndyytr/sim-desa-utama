@@ -14,6 +14,7 @@ import {
     Clock,
     Eye,
     FileText,
+    Printer,
     TrendingUp,
     XCircle,
 } from 'lucide-react';
@@ -31,7 +32,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { index as reportsIndexRoute } from '@/routes/kades/reports';
+import {
+    index as reportsIndexRoute,
+    print as reportsPrintRoute,
+} from '@/routes/kades/reports';
 
 echarts.use([
     BarChart,
@@ -240,6 +244,31 @@ export default function ReportsIndex({
         handleQueryChange({
             [key]: value === 'all' ? undefined : value,
         });
+    };
+
+    const handlePrint = () => {
+        const params: Record<string, any> = {
+            search: filters.search || undefined,
+            period: filters.period || undefined,
+            start_date: filters.start_date || undefined,
+            end_date: filters.end_date || undefined,
+            type_service_id: filters.type_service_id || undefined,
+            status: filters.status || undefined,
+            assigned_to: filters.assigned_to || undefined,
+        };
+
+        Object.keys(params).forEach((key) => {
+            if (
+                params[key] === undefined ||
+                params[key] === null ||
+                params[key] === 'all'
+            ) {
+                delete params[key];
+            }
+        });
+
+        const url = reportsPrintRoute(params).url;
+        window.open(url, '_blank');
     };
 
     const statusChartData = useMemo(() => {
@@ -659,6 +688,14 @@ export default function ReportsIndex({
                         className="t-size3 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
                     >
                         Cari
+                    </Button>
+                    <Button
+                        onClick={handlePrint}
+                        variant="outline"
+                        className="t-size3 flex items-center gap-1.5 border-(--primary) text-(--primary) hover:bg-(--primary)/10 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:shadow-none"
+                    >
+                        <Printer className="size-4" />
+                        Cetak Laporan
                     </Button>
                 </div>
 

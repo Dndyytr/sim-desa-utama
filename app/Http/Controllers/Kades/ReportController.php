@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Kades;
 
 use App\Http\Controllers\Controller;
+use App\Models\ReportPrintLog;
 use App\Models\Submission;
 use App\Models\TypeService;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -16,7 +18,7 @@ class ReportController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:r-kades-reports', only: ['index', 'show']),
+            new Middleware('permission:r-kades-reports', only: ['index', 'show', 'print']),
         ];
     }
 
@@ -189,6 +191,159 @@ class ReportController extends Controller implements HasMiddleware
             ],
             'i' => $i,
         ]);
+    }
+
+    public function print(Request $request)
+    {
+        $request->validate([
+            'period' => 'nullable|in:all,today,week,month,year,custom',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'type_service_id' => 'nullable|exists:type_services,id',
+            'status' => 'nullable|in:all,pending,processing,approved,finished,rejected',
+            'assigned_to' => 'nullable|exists:users,id',
+            'search' => 'nullable|string',
+        ]);
+
+        $period = $request->input('period', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $typeServiceId = $request->input('type_service_id');
+        $status = $request->input('status', 'all');
+        $assignedTo = $request->input('assigned_to');
+        $search = $request->input('search');
+
+        // Build base query
+        $query = Submission::leftJoin('services', 'submissions.id', '=', 'services.submission_id')
+            ->leftJoin('residents', 'submissions.resident_id', '=', 'residents.id')
+            ->leftJoin('type_services', 'submissions.type_service_id', '=', 'type_services.id')
+            ->leftJoin('users', 'services.assigned_to', '=', 'users.id');
+
+        // Filter: Period
+        if ($period === 'today') {
+            $query->whereDate('submissions.created_at', today());
+        } elseif ($period === 'week') {
+            $query->whereBetween('submissions.created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($period === 'month') {
+            $query->whereMonth('submissions.created_at', now()->month)
+                ->whereYear('submissions.created_at', now()->year);
+        } elseif ($period === 'year') {
+            $query->whereYear('submissions.created_at', now()->year);
+        } elseif ($period === 'custom' && $startDate && $endDate) {
+            $query->whereBetween('submissions.created_at', [
+                $startDate.' 00:00:00',
+                $endDate.' 23:59:59',
+            ]);
+        }
+
+        // Filter: Type Service
+        if ($typeServiceId) {
+            $query->where('submissions.type_service_id', $typeServiceId);
+        }
+
+        // Filter: Assigned To (Officer)
+        if ($assignedTo) {
+            $query->where('services.assigned_to', $assignedTo);
+        }
+
+        // Filter: Status
+        if ($status && $status !== 'all') {
+            if ($status === 'pending') {
+                $query->where('submissions.status', 'pending');
+            } elseif ($status === 'processing') {
+                $query->where('services.status', 'processing');
+            } elseif ($status === 'approved') {
+                $query->whereIn('services.status', ['completed', 'approved']);
+            } elseif ($status === 'finished') {
+                $query->where('services.status', 'finished');
+            } elseif ($status === 'rejected') {
+                $query->where(function ($q) {
+                    $q->where('submissions.status', 'rejected')
+                        ->orWhere('services.status', 'rejected');
+                });
+            }
+        }
+
+        // Filter: Search (TRAILING-ONLY WILDCARD to utilize index)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('submissions.submission_number', 'like', $search.'%')
+                    ->orWhere('services.service_number', 'like', $search.'%')
+                    ->orWhere('residents.name', 'like', $search.'%');
+            });
+        }
+
+        // Metrik Utama (Aggregated using clones)
+        $totalSubmissions = (clone $query)->count();
+        $totalFinished = (clone $query)->where('services.status', 'finished')->count();
+        $totalRejected = (clone $query)->where(function ($q) {
+            $q->where('submissions.status', 'rejected')
+                ->orWhere('services.status', 'rejected');
+        })->count();
+        $totalProcessing = (clone $query)->where(function ($q) {
+            $q->whereIn('submissions.status', ['pending', 'needs_correction'])
+                ->orWhereIn('services.status', ['processing', 'completed', 'approved']);
+        })->count();
+
+        $completionRate = $totalSubmissions > 0 ? round(($totalFinished / $totalSubmissions) * 100) : 0;
+
+        // Fetch all records for printing
+        $reports = $query->select([
+            'submissions.id as submission_id',
+            'submissions.submission_number',
+            'submissions.subject',
+            'submissions.status as submission_status',
+            'submissions.created_at as submission_created_at',
+            'submissions.type_service_id',
+            'residents.name as resident_name',
+            'residents.nik as resident_nik',
+            'type_services.service_name as service_name',
+            'services.id as service_id',
+            'services.service_number',
+            'services.status as service_status',
+            'services.assigned_to',
+            'users.name as officer_name',
+        ])
+            ->orderBy('submissions.created_at', 'desc')
+            ->get();
+
+        // Record history log
+        ReportPrintLog::create([
+            'user_id' => auth()->id(),
+            'report_type' => 'Laporan Pelayanan Desa',
+            'period' => $period,
+            'start_date' => $period === 'custom' ? $startDate : null,
+            'end_date' => $period === 'custom' ? $endDate : null,
+            'filters' => [
+                'type_service_id' => $typeServiceId,
+                'status' => $status,
+                'assigned_to' => $assignedTo,
+                'search' => $search,
+            ],
+        ]);
+
+        $pdf = Pdf::loadView('reports.print', [
+            'reports' => $reports,
+            'metrics' => [
+                'total_submissions' => $totalSubmissions,
+                'total_finished' => $totalFinished,
+                'total_rejected' => $totalRejected,
+                'total_processing' => $totalProcessing,
+                'completion_rate' => $completionRate,
+            ],
+            'filters' => [
+                'period' => $period,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'type_service' => $typeServiceId ? TypeService::find($typeServiceId)?->service_name : 'Semua',
+                'status' => $status,
+                'officer' => $assignedTo ? User::find($assignedTo)?->name : 'Semua',
+            ],
+            'printed_by' => auth()->user(),
+            'date_printed' => now()->translatedFormat('d F Y H:i'),
+        ]);
+
+        return $pdf->stream('laporan-pelayanan-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function show($id)
