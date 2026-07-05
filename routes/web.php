@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kadangs\LetterController as KadangsLetterController;
 use App\Http\Controllers\Kadangs\ServiceArchiveController as KadangsServiceArchiveController;
 use App\Http\Controllers\Kadangs\ServiceController as KadangsServiceController;
+use App\Http\Controllers\Kades\ReportController as KadesReportController;
 use App\Http\Controllers\Kades\ServiceController as KadesServiceController;
 use App\Http\Controllers\Pekets\SubmissionController;
 use App\Http\Controllers\Sekdes\FamilyController;
@@ -82,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('services/{service}/revise', [KadesServiceController::class, 'revise'])->name('services.revise');
         Route::patch('services/{service}/reject', [KadesServiceController::class, 'reject'])->name('services.reject');
         Route::resource('services', KadesServiceController::class);
+        Route::resource('reports', KadesReportController::class)->only(['index', 'show']);
     });
 });
 

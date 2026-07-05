@@ -91,6 +91,9 @@ class PermissionSeeder extends Seeder
         ['name' => 'c-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Create'],
         ['name' => 'u-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Update'],
         ['name' => 'd-kadang-archives', 'guard_name' => 'web', 'feature' => 'kadang-archive', 'title' => 'Delete'],
+
+        // Kades Reports (Laporan - Kepala Desa)
+        ['name' => 'r-kades-reports', 'guard_name' => 'web', 'feature' => 'kades-report', 'title' => 'Read'],
     ];
 
     /**
