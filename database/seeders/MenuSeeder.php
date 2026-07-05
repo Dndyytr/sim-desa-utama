@@ -156,6 +156,16 @@ class MenuSeeder extends Seeder
             'status' => 'enabled',
             'locale' => 'id',
         ],
+        [
+            'parent_id' => null,
+            'title' => 'Laporan',
+            'url' => 'kades.reports.index',
+            'tag' => 'kades-reports',
+            'icon' => 'BarChart3',
+            'permission' => 'kades-report',
+            'status' => 'enabled',
+            'locale' => 'id',
+        ],
     ];
 
     /**
