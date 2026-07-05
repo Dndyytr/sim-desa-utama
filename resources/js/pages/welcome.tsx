@@ -7,7 +7,7 @@ export default function Welcome() {
     // canRegister = true,
     // }: {
     // canRegister?: boolean;
-    // }
+    // } oke
     const { auth } = usePage<{
         auth: { user?: Record<string, unknown> | null };
     }>().props;

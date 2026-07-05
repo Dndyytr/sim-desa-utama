@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('services/{service}/revise', [KadesServiceController::class, 'revise'])->name('services.revise');
         Route::patch('services/{service}/reject', [KadesServiceController::class, 'reject'])->name('services.reject');
         Route::resource('services', KadesServiceController::class);
+        Route::get('reports/print', [KadesReportController::class, 'print'])->name('reports.print');
         Route::resource('reports', KadesReportController::class)->only(['index', 'show']);
     });
 });
