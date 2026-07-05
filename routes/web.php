@@ -5,6 +5,7 @@ use App\Http\Controllers\Admins\MenuController;
 use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
+use App\Http\Controllers\Admins\VillageAgendaController;
 use App\Http\Controllers\Admins\VillageInformationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FileController;
@@ -58,6 +59,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('familys', FamilyController::class);
         Route::patch('services/{service}/disposition', [ServiceController::class, 'disposition'])->name('services.disposition');
         Route::resource('services', ServiceController::class);
+        Route::post('village-agendas/bulk-delete', [VillageAgendaController::class, 'bulkDelete'])->name('village-agendas.bulk-delete');
+        Route::resource('village-agendas', VillageAgendaController::class);
     });
 
     // Pekets routes
