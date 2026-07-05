@@ -135,85 +135,8 @@ export default function ArchivesShow({ archive }: { archive: ArchiveData }) {
     };
 
     const handlePrint = () => {
-        const printWindow = window.open('', '_blank');
-
-        if (printWindow && service) {
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Surat Resmi - ${letter?.letter_number || ''}</title>
-                    <style>
-                        body {
-                            font-family: Arial, Helvetica, sans-serif;
-                            font-size: 11pt;
-                            line-height: 1.6;
-                            color: #000;
-                            margin: 40px;
-                        }
-                        .header {
-                            text-align: center;
-                            margin-bottom: 15px;
-                            position: relative;
-                        }
-                        .header h3 {
-                            margin: 0; padding: 0;
-                            text-transform: uppercase;
-                            font-size: 14pt; font-weight: bold;
-                        }
-                        .header h2 {
-                            margin: 0; padding: 0;
-                            text-transform: uppercase;
-                            font-size: 16pt; font-weight: bold;
-                        }
-                        .header p { margin: 5px 0 0 0; font-size: 10pt; }
-                        .separator {
-                            border: none;
-                            border-top: 3px solid #000;
-                            margin: 10px 0 5px 0;
-                        }
-                        .separator-thin {
-                            border: none;
-                            border-top: 1px solid #000;
-                            margin: 2px 0 20px 0;
-                        }
-                        .letter-number {
-                            margin: 20px 0;
-                            text-align: center;
-                        }
-                        .letter-number h4 {
-                            margin: 0; font-size: 12pt;
-                            text-decoration: underline;
-                            text-transform: uppercase;
-                        }
-                        .letter-number p {
-                            margin: 5px 0 0 0; font-size: 11pt;
-                        }
-                        .content { margin: 20px 0; text-align: justify; }
-                        .content p { margin: 0 0 10px 0; }
-                        @media print { body { margin: 2cm; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h3>Pemerintah Desa Utama</h3>
-                        <h2>Kecamatan Contoh</h2>
-                        <p>Jl. Raya Desa Utama No. 1, Kode Pos 12345</p>
-                    </div>
-                    <hr class="separator" />
-                    <hr class="separator-thin" />
-                    <div class="letter-number">
-                        <h4>${submission?.type_service?.service_name || 'Surat Keterangan'}</h4>
-                        <p>Nomor: ${letter?.letter_number || '-'}</p>
-                    </div>
-                    <div class="content">
-                        ${service?.draft_content || '<p>-</p>'}
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
+        if (letter) {
+            window.open(`/files/letters/${letter.id}/print`, '_blank');
         }
     };
 
@@ -474,10 +397,7 @@ export default function ArchivesShow({ archive }: { archive: ArchiveData }) {
                                             Cetak Ulang
                                         </Button>
                                         <a
-                                            href={route(
-                                                'kadangs.letters.download',
-                                                letter.id,
-                                            )}
+                                            href={`/files/letters/${letter.id}/download`}
                                             className="inline-flex items-center gap-1 rounded-md border-[1.7px] border-(--primary)/50 bg-(--primary)/10 px-3 py-2 text-sm font-medium text-(--primary) transition-all duration-300 hover:-translate-y-0.5 hover:border-(--primary)/70 hover:bg-(--primary)/20 hover:shadow-[0_5px_7px_0_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-none"
                                         >
                                             <Download className="size-4" />

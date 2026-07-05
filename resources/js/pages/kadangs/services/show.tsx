@@ -4,6 +4,7 @@ import {
     Calendar,
     CheckCircle,
     Download,
+    Eye,
     FileText,
     FileUp,
     History,
@@ -533,15 +534,24 @@ Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.`}
                                                         </div>
                                                     </div>
 
-                                                    <a
-                                                        href={`/storage/${file.file_path}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-(--primary)/10 text-(--primary) transition-all hover:bg-(--primary) hover:text-white bp360:size-7.5 bp400:size-8"
-                                                        title="Download Lampiran"
-                                                    >
-                                                        <Download className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4" />
-                                                    </a>
+                                                    <div className="flex gap-1">
+                                                        <a
+                                                            href={`/files/attachments/${file.id}/preview`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-(--primary)/10 text-(--primary) transition-all hover:bg-(--primary) hover:text-white bp360:size-7.5 bp400:size-8"
+                                                            title="Pratinjau Lampiran"
+                                                        >
+                                                            <Eye className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4" />
+                                                        </a>
+                                                        <a
+                                                            href={`/files/attachments/${file.id}/download`}
+                                                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-(--primary)/10 text-(--primary) transition-all hover:bg-(--primary) hover:text-white bp360:size-7.5 bp400:size-8"
+                                                            title="Download Lampiran"
+                                                        >
+                                                            <Download className="size-3.25 bp360:size-3.5 bp400:size-3.75 md:size-4" />
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             ),
                                         )}
