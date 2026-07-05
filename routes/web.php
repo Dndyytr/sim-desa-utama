@@ -5,6 +5,7 @@ use App\Http\Controllers\Admins\MenuController;
 use App\Http\Controllers\Admins\PermissionController;
 use App\Http\Controllers\Admins\RoleController;
 use App\Http\Controllers\Admins\UserController;
+use App\Http\Controllers\Admins\VillageInformationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\Kadangs\LetterController as KadangsLetterController;
@@ -43,6 +44,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('menus/bulk-delete', [MenuController::class, 'bulkDelete'])->name('menus.bulk-delete');
         Route::resource('menus', MenuController::class);
         Route::resource('announcements', AnnouncementController::class);
+        Route::post('village-informations/bulk-delete', [VillageInformationController::class, 'bulkDelete'])->name('village-informations.bulk-delete');
+        Route::resource('village-informations', VillageInformationController::class);
     });
 
     // Sekdes routes
